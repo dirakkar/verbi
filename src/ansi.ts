@@ -1,53 +1,94 @@
-export interface AnsiFormat {
-	background?: AnsiColor
-	foreground?: AnsiColor
-	modifiers: AnsiModifier[]
+import tty from 'node:tty'
+import {Rec} from './rec'
+
+export const ansiFormats = {
+	reset: [0, 0],
+	bold: [1, 22],
+	dim: [2, 22],
+	italic: [3, 23],
+	underline: [4, 24],
+	overline: [53, 55],
+	inverse: [7, 27],
+	hidden: [8, 28],
+	strikethrough: [9, 29],
+
+	black: [30, 39],
+	red: [31, 39],
+	green: [32, 39],
+	yellow: [33, 39],
+	blue: [34, 39],
+	magenta: [35, 39],
+	cyan: [36, 39],
+	white: [37, 39],
+	gray: [90, 39],
+
+	bgBlack: [40, 49],
+	bgRed: [41, 49],
+	bgGreen: [42, 49],
+	bgYellow: [43, 49],
+	bgBlue: [44, 49],
+	bgMagenta: [45, 49],
+	bgCyan: [46, 49],
+	bgWhite: [47, 49],
+	bgGray: [100, 49],
+} satisfies Rec<[number, number]>
+
+export type AnsiFormat = keyof typeof ansiFormats
+
+export function ansiFormatIs(val: string): val is AnsiFormat {
+	return val in ansiFormats
 }
 
-export const ansiColors = [
-	'black',
-	'red',
-	'green',
-	'yellow',
-	'blue',
-	'magenta',
-	'cyan',
-	'white',
-] as const
-export type AnsiColor = typeof ansiColors[number]
+export interface Ansi {
+	(string: string, ...formats: (AnsiFormat | null | undefined | false)[]): string
 
-export const ansiModifiers = [
-	'bold',
-	'faint',
-	'italic',
-	'underline',
-	null,
-	null,
-	'negative',
-	null,
-	'strikethrough',
-] as const
-export type AnsiModifier = Exclude<typeof ansiModifiers[number], null>
-
-export function ansiApply(string: string, format: AnsiFormat) {
-	if (format.foreground) {
-		const i = ansiColors.indexOf(format.foreground)
-		string = escape(30 + i, string)
-	}
-
-	if (format.background) {
-		const i = ansiColors.indexOf(format.background)
-		string = escape(40 + i, string)
-	}
-
-	for (const modifier of format.modifiers) {
-		const i = ansiModifiers.indexOf(modifier)
-		string = escape(1 + i, string)
-	}
-
-	return string
+	reset: Ansi
+	bold: Ansi
+	dim: Ansi
+	italic: Ansi
+	underline: Ansi
+	overline: Ansi
+	inverse: Ansi
+	hidden: Ansi
+	strikethrough: Ansi
+	black: Ansi
+	red: Ansi
+	green: Ansi
+	yellow: Ansi
+	blue: Ansi
+	magenta: Ansi
+	cyan: Ansi
+	white: Ansi
+	gray: Ansi
+	bgBlack: Ansi
+	bgRed: Ansi
+	bgGreen: Ansi
+	bgYellow: Ansi
+	bgBlue: Ansi
+	bgMagenta: Ansi
+	bgCyan: Ansi
+	bgWhite: Ansi
+	bgGray: Ansi
 }
 
-function escape(code: number, string: string) {
-	return '\x1b[' + code + 'm' + string + '\x1b[0m'
+// TODO https://github.com/nodejs/node/pull/40240
+const hasColors = tty.WriteStream.prototype.hasColors()
+
+export const ansi = createAnsi([])
+
+function createAnsi(formatsBase: AnsiFormat[]): Ansi {
+	const apply = (string: string, ...formats: (AnsiFormat | null | undefined | false)[]) => {
+		if (!hasColors) return string
+
+		for (const format of (formatsBase as typeof formats).concat(formats)) {
+			if (!format) continue
+			string = '\u001B[' + format[0] + 'm' + string + '\u001B[' + format[1] + 'm'
+		}
+		return string
+	}
+
+	return new Proxy(apply, { get: (_, key) => {
+		if (key in ansiFormats) return createAnsi(formatsBase.concat(key as AnsiFormat))
+		return apply[key as never]
+	} }) as Ansi
 }

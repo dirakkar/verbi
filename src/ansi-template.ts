@@ -1,14 +1,14 @@
-import {AnsiFormat, ansiApply, ansiColors, ansiModifiers} from './ansi'
+import {AnsiFormat, ansi, ansiFormatIs} from './ansi'
 
 export interface AnsiTemplateChunk {
-	format?: AnsiFormat
+	formats?: AnsiFormat[]
 	text: string
 }
 
 export function ansiTemplate(template: string) {
 	return ansiTemplateParse(template).map(chunk => {
-		return chunk.format
-			? ansiApply(chunk.text, chunk.format)
+		return chunk.formats
+			? ansi(chunk.text, ...chunk.formats)
 			: chunk.text
 	}).join('')
 }
@@ -23,33 +23,13 @@ export function ansiTemplateParse(template: string) {
 			const formattedChunk = execArr[0]
 			const matchArr = formattedChunk.match(/\[(.+)\]\((.+)\)/)
 			const text = matchArr![1]
-			const formatString = matchArr![2]
-			const format: AnsiFormat = {modifiers: []}
+			const formats = matchArr![2].split(',')
 
-			for (const chunk of formatString.split(',')) {
-				if (ansiColors.includes(chunk as any)) {
-					format.foreground = chunk as any
-				} else if (ansiModifiers.includes(chunk as any)) {
-					format.modifiers.push(chunk as any)
-				} else if (chunk.includes('/')) {
-					const [foreground, background] = chunk.split('/')
-
-					if (foreground) {
-						if (!ansiColors.includes(foreground as any)) {
-							throw new Error(`Not a valid color: "${foreground}"`)
-						}
-						format.foreground = foreground as any
-					}
-					if (background) {
-						if (!ansiColors.includes(background as any)) {
-							throw new Error(`Not a valid color: "${foreground}"`)
-						}
-						format.background = background as any
-					}
-				} else throw new Error(`Unknown format "${chunk}"`)
+			for (const format of formats) {
+				if (!ansiFormatIs(format)) throw new Error(`Unknown format "${format}"`)
 			}
 
-			chunks.push({text, format})
+			chunks.push({text, formats: formats as AnsiFormat[]})
 		} else if (execArr[3] !== undefined) {
 			const rawChunk = execArr[3]
 			chunks.push({text: rawChunk})

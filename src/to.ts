@@ -63,10 +63,3 @@ function to(name: string, wrap: (formula: Formula) => Formula) {
 	}, name)
 }
 
-
-const asyncStuff = async () => 100
-
-const syncStuff = toSync(asyncStuff)
-
-
-syncStuff()

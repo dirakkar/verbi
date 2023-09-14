@@ -1,4 +1,4 @@
-import {ansiApply} from './ansi'
+import {ansi} from './ansi'
 import {ansiTemplate} from './ansi-template'
 import {ansiWrap} from './ansi-wrap'
 import {ansiStrip} from './ansi-strip'
@@ -11,6 +11,7 @@ import {ViterViewNode} from './viter-view'
 import {tygerEvent} from './tyger-event'
 import {toAsync, toSync} from './to'
 import {ansiControl} from './ansi-control'
+import {Atom} from './atom'
 
 const stdoutWrite = toSync((text: string) => {
     return new Promise(res => {
@@ -18,7 +19,7 @@ const stdoutWrite = toSync((text: string) => {
     })
 }, 'stdoutWrite')
 
-export class ViterViewRender extends Base {
+export class ViterViewRenderer extends Base {
     node() {
         return null! as ViterViewNode
     }
@@ -29,18 +30,24 @@ export class ViterViewRender extends Base {
         return new Timer(16, () => toAsync(this).write(), true)
     }
 
-    @cell write() {
+    @cell write(): number {
         tygerEvent(process.stdout, 'resize')
         tygerEvent(process.stdin, 'data')
 
         const columns = process.stdout.columns ?? 80
-        const rows = this.render(columns, this.node())
+		const columnsPrev = Atom.peek(() => this.write()) ?? columns
+		const resized = columnsPrev !== columns
+
+		const rows = this.render(columns, this.node())
 
         stdoutWrite(ansiControl({
-            erase: 'entire',
-            cursorAbsolute: [0, 0],
+            erase: resized ? 'entire' : 'down',
+            cursorAbsolute: [0, resized ? 0 : null],
+			cursorRelative: [0, resized ? 0 : -(rows.length - 1)],
             cursorVisible: false,
         }) + rows.join('\n'))
+
+		return columns
     }
 
     stop() {
@@ -115,7 +122,7 @@ export class ViterViewRender extends Base {
 				let prefix: string
 
 				if (i === 0) {
-					prefix = bold(marker)
+					prefix = ansi.bold(marker)
 				} else {
 					prefix = ' '.repeat(marker.length)
 				}
@@ -140,8 +147,8 @@ export class ViterViewRender extends Base {
 				const key = ansiTemplate(keyRows[i])
 				const value = valueRows[i]
 
-				if (key && value) return bold(key.padStart(keyLongest, ' ')) + ' ' + value
-				if (key) return bold(key)
+				if (key && value) return ansi.bold(key.padStart(keyLongest, ' ')) + ' ' + value
+				if (key) return ansi.bold(key)
 				return ' '.repeat(keyLongest + 1) + value
 			})
 		}).flat(2)
@@ -151,13 +158,10 @@ export class ViterViewRender extends Base {
 		if (!content) return []
 
 		return [
-			...this.renderString(c, bold(title)),
+			...this.renderString(c, ansi.bold(title)),
 			...this.render(c - 2, content)
 				.map(row => '  ' + row),
 		]
 	}
 }
 
-function bold(string: string) {
-	return ansiApply(string, {modifiers: ['bold']})
-}

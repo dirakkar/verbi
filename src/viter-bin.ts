@@ -1,4 +1,4 @@
-import {ansiApply} from './ansi'
+import {ansi} from './ansi'
 import {cell} from './cell'
 import {errorStack} from './error'
 import {promiseLike} from './promise'
@@ -7,7 +7,17 @@ import {toAsync} from './to'
 import {ViterCommand} from './viter-command'
 import {ViterPack} from './viter-pack'
 import {ViterViewNode, viterView} from './viter-view'
-import {ViterViewRender as ViterViewRenderer} from './viter-view-renderer'
+import {ViterViewRenderer} from './viter-view-renderer'
+
+const viewNode = cell('viewNode', (next?: () => ViterViewNode) => {
+	return next ?? (() => null)
+})
+
+const renderer = ViterViewRenderer.make({
+	node: () => viewNode()(),
+})
+
+const rendererLoop = renderer.writeLoop()
 
 const commands: Rec<() => ViterCommand> = {
 	help: () => {
@@ -22,10 +32,6 @@ const commands: Rec<() => ViterCommand> = {
 
 const commandName = process.argv[2] || 'help'
 const command = commands[commandName]?.()
-
-const viewNode = cell('viewNode', (next?: () => ViterViewNode) => {
-	return next ?? (() => null)
-})
 
 if (!command) {
 	viewNode(() => errorNode(`Unknown command "${commandName}"`))
@@ -43,20 +49,17 @@ if (!command) {
 		.catch(error => {
 			viewNode(() => errorNode(error))
 		})
+		.finally(() => {
+			setTimeout(() => rendererLoop.dispose(), 1000)
+		})
 }
-
-const renderer = ViterViewRenderer.make({
-	node: () => viewNode()(),
-})
-
-renderer.writeLoop()
 
 function errorNode(error: any) {
 	if (error instanceof Error) {
 		error =
 			String(error) +
 			'\n' +
-			ansiApply(errorStack(error, '  ')!, {modifiers: ['faint']})
+			ansi.dim(errorStack(error, '  ')!)
 	}
 	error = String(error)
 
