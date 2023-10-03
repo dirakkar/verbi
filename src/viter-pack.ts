@@ -16,11 +16,15 @@ import {toSync} from './to'
 import {Atom} from './atom'
 import {rethrowPromise} from './rethrow'
 import {viterView} from './viter-view'
+import {tygerInterval} from './tyger-interval'
 
-export class ViterPack extends ViterPool<{
-	project: string
-	publish: boolean
-}> implements ViterCommand {
+export class ViterPack
+	extends ViterPool<{
+		project: string
+		publish: boolean
+	}>
+	implements ViterCommand
+{
 	url() {
 		return import.meta.url
 	}
@@ -28,15 +32,11 @@ export class ViterPack extends ViterPool<{
 	run() {
 		const pkgs = this.packageNames()
 
-		for (const pkg of pkgs) {
-			this.packageBuilt(pkg)
-		}
-		for (const pkg of pkgs) {
-			if (this.packageBuildError(pkg)) return
-		}
+		// FIXME
+		// tygerConcurrent(pkgs.map(pkg => () => this.packageBuilt(pkg)))
 
 		for (const pkg of pkgs) {
-			// this.packageTested(pkg)
+			if (this.packageBuildError(pkg)) return
 		}
 
 		if (this.input.publish) {
@@ -44,18 +44,24 @@ export class ViterPack extends ViterPool<{
 		}
 	}
 
-	view() {
+	@cell counter(): number {
+		tygerInterval(1000)
+		return (Atom.peek(() => this.counter()) ?? 0) + 1
+	}
+
+	@cell view() {
+		const pkgs = this.packageNames()
+
 		const buildStatus = () => {
-			const all = this.packageNames()
-			if (all.length === 0) {
+			if (pkgs.length === 0) {
 				return 'no packages to build'
 			}
 
-			const plural = all.length > 1 ? 'packages' : 'package'
+			const plural = pkgs.length > 1 ? 'packages' : 'package'
 
-			const statuses = all.map(pkg => this.packageBuildStatus(pkg))
+			const statuses = pkgs.map(pkg => this.packageBuildStatus(pkg))
 			if (statuses.some(status => status.type === 'pending')) {
-				return `building ${all.length} ${plural}`
+				return `building ${pkgs.length} ${plural}`
 			}
 
 			if (statuses.some(status => status.type === 'fail')) {
@@ -81,7 +87,7 @@ export class ViterPack extends ViterPool<{
 		return viterView.pad([
 			`[${buildStatus()}](bold)`,
 			viterView.dict(
-				this.packageNames().map(pkg => [
+				pkgs.map(pkg => [
 					`[${pkg}](${packageNameStyle(pkg)})`,
 					viterView.vertical([
 						this.packageBuildStatus(pkg).text,
@@ -95,7 +101,7 @@ export class ViterPack extends ViterPool<{
 							content: this.packageBuildError(pkg) ?? null,
 						}),
 					]),
-				]),
+				])
 			),
 		])
 	}
@@ -150,10 +156,12 @@ export class ViterPack extends ViterPool<{
 	}
 
 	@cell moduleOwning() {
-		return Object.fromEntries(this.packageNames().flatMap(pkg => {
-			const modules = this.packageModules(pkg)
-			return modules.map(mod => [mod.name, pkg])
-		})) as Rec<string>
+		return Object.fromEntries(
+			this.packageNames().flatMap(pkg => {
+				const modules = this.packageModules(pkg)
+				return modules.map(mod => [mod.name, pkg])
+			})
+		) as Rec<string>
 	}
 
 	packageTarget(pkg: string) {
@@ -210,8 +218,8 @@ export class ViterPack extends ViterPool<{
 	}
 
 	@dict packageBuildStatus(pkg: string, status?: {
-		type: 'pending' | 'success' | 'fail',
-		text: string,
+			type: 'pending' | 'success' | 'fail',
+			text: string,
 	}) {
 		return status ?? {
 			type: 'pending',
@@ -309,16 +317,13 @@ export class ViterPack extends ViterPool<{
 	}
 
 	packageBuildProcess(pkg: string) {
-		try {
-			this.mirror.packageWrite(pkg)
-			const minzipSize = this.mirror.packageWriteMinzip(pkg)
-			this.packageMinzipSize(pkg, minzipSize)
-			if (this.packageBin(pkg)) {
-				this.mirror.packageWriteBin(pkg)
-			}
-		} finally {
-			this.mirror.packageBuildClose(pkg)
+		this.mirror.packageWrite(pkg)
+		const minzipSize = this.mirror.packageWriteMinzip(pkg)
+		this.packageMinzipSize(pkg, minzipSize)
+		if (this.packageBin(pkg)) {
+			this.mirror.packageWriteBin(pkg)
 		}
+		this.packageBuildClose(pkg)
 	}
 
 	packageBuildClose(pkg: string) {
@@ -326,17 +331,17 @@ export class ViterPack extends ViterPool<{
 		Atom.peek(() => this.packageBuildBinRoll(pkg))?.dispose()
 	}
 
-	@action packageWrite(pkg: string) {
+	@cell packageWrite(pkg: string) {
 		this.packageBuildRoll(pkg).write(this.packageTarget(pkg))
 	}
 
-	@action packageWriteBin(pkg: string) {
+	@cell packageWriteBin(pkg: string) {
 		const target = this.packageTarget(pkg).join('bin.js')
 
 		this.packageBuildBinRoll(pkg).write(target)
 	}
 
-	@action packageWriteMinzip(pkg: string) {
+	@cell packageWriteMinzip(pkg: string) {
 		const target = this.packageTarget(pkg).join(`${pkg}.min.js`)
 
 		this.packageBuildRoll(pkg).write(target, [
@@ -383,25 +388,11 @@ export class ViterPack extends ViterPool<{
 	}
 }
 
-// TODO move build logic here
-export class ViterPackBuild extends ViterPool<{
-	project: string
-	package: string
-}> {
-	url() {
-		return import.meta.url
-	}
-
-	project() {
-		return ViterProject.from(TygerFile.from(this.input.project))
-	}
-}
-
 async function gzipSize(data: any) {
 	const gzip = zlib.createGzip()
 
 	let result = 0
-	gzip.on('data', (chunk) => {
+	gzip.on('data', chunk => {
 		result += chunk.length
 	})
 

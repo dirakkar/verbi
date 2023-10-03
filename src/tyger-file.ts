@@ -31,14 +31,14 @@ export interface TygerFileStat {
 	mtime: Date
 }
 
-function statFrom(native: fs.Stats | fs.BigIntStats): TygerFileStat {
+function statFrom(path: string, native: fs.Stats | fs.BigIntStats): TygerFileStat {
 	let type: TygerFileType | undefined
 
 	if (native.isFile()) type = 'file'
 	if (native.isDirectory()) type = 'dir'
 	if (native.isSymbolicLink()) type = 'link'
 
-	if (!type) throw new Error('Unsupported file type')
+	if (!type) throw new TygerFileError(path, 'Unsupported file type')
 
 	return {
 		type,
@@ -95,7 +95,7 @@ export class TygerFile extends Base {
 
 		const stat = fs.statSync(this.path, {throwIfNoEntry: false})
 		if (!stat) return null
-		return statFrom(stat)
+		return statFrom(this.path, stat)
 	}
 
 	/**
@@ -127,6 +127,7 @@ export class TygerFile extends Base {
 	@cell watch() {
 		const watcher = chokidar.watch(this.path, {
 			persistent: true,
+			depth: 0,
 			ignoreInitial: true,
 			awaitWriteFinish: {
 				stabilityThreshold: 100,

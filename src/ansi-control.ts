@@ -1,42 +1,64 @@
-// TODO add more control sequences
+// TODO add more sequences
 // https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences
+// https://www.npmjs.com/package/ansi-escapes?activeTab=readme
 
-export interface AnsiControlInput {
-	erase?: 'up' | 'down' | 'entire'
-	cursorAbsolute?: [x: number, y?: number | null]
-	cursorRelative?: [x: number, y?: number | null]
-	cursorVisible?: boolean
-}
+import {AnsiEsc} from './ansi'
 
-const Esc = '\u001B['
-
-export function ansiControl(input: AnsiControlInput) {
-	let result = ''
-
-	if (input.cursorAbsolute) {
-		const [x, y] = input.cursorAbsolute
-
-		if (y == null) result += Esc + (x + 1) + 'G'
-		else result += Esc + (y + 1) + ';' + (x + 1) + 'H'
+export namespace ansiControl {
+	/**
+	 * Set absolute cursor position.
+	 */
+	export function moveTo(x: number, y?: number | null) {
+		if (y == null) return AnsiEsc + (x + 1) + 'G'
+		return AnsiEsc + (y + 1) + ';' + (x + 1) + 'H'
 	}
 
-	if (input.cursorRelative) {
-		const [x, y] = input.cursorRelative
+	/**
+	 * Move cursor relatively.
+	 */
+	export function moveBy(x?: number | null, y?: number | null) {
+		let result = ''
 
-		if (x < 0) result += Esc + -x + 'D'
-		if (x > 0) result += Esc + x + 'C'
+		if (x! < 0) result += AnsiEsc + -x! + 'D'
+		if (x! > 0) result += AnsiEsc + x + 'C'
 
-		if (y && y < 0) result += Esc + -y + 'A'
-		if (y && y > 0) result += Esc + y + 'B'
+		if (y! < 0) result += AnsiEsc + -y! + 'A'
+		if (y! > 0) result += AnsiEsc + y + 'B'
+
+		return result
 	}
 
-	if (input.cursorVisible !== undefined) {
-		result += Esc + '?25' + (input.cursorVisible ? 'h' : 'l')
+	export const cursorHide = AnsiEsc + '?25l'
+
+	export const cursorShow = AnsiEsc + '?25h'
+
+	export const eraseScreen = AnsiEsc + '2J'
+
+	/**
+	 * Erase from the current cursor position up the specified amount of rows (defaults to 1).
+	 */
+	export function erase(count = 1) {
+		if (count === 1) return AnsiEsc + '2K'
+
+		let result = ''
+
+		for (let i = 0; i < count; i++) {
+			result += erase()
+			if (i !== count - 1) result += cursorUp
+		}
+
+		if (count) result += cursorLeft
+
+		return result
 	}
 
-	if (input.erase === 'entire') result += Esc + '2J' + Esc + '3J'
-	if (input.erase === 'up') result += Esc + '1J'
-	if (input.erase === 'down') result += Esc + 'J'
+	export const cursorLeft = AnsiEsc + 'G'
 
-	return result
+	export function cursorUp(count = 1) {
+		return AnsiEsc + count + 'A'
+	}
+
+	export function cursorDown(count = 1) {
+		return AnsiEsc + count + 'B'
+	}
 }

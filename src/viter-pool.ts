@@ -9,6 +9,7 @@ import {toSync} from './to'
 import {tygerEventNext} from './tyger-event'
 import {arrayMake} from './array'
 import {ViterWorkerCall, viterWorkerUrl} from './viter-worker'
+import {action} from './action'
 
 type ViterPoolInput<T> = T extends ViterPool<infer Id> ? Id : never
 
@@ -23,11 +24,13 @@ export abstract class ViterPool<Input = void> extends Base {
 	abstract url(): string
 
 	mirror = worker_threads.isMainThread
-		? new Proxy(this, { get: (_, key: string) => {
-			const val = (this as any)[key]
-			if (!formulaIs(val)) return val
-			return (...args: any) => this.call(key, args)
-		} })
+		? new Proxy(this, {
+				get: (_, key: string) => {
+					const val = (this as any)[key]
+					if (!formulaIs(val)) return val
+					return (...args: any) => this.call(key, args)
+				},
+		  })
 		: this
 
 	queue = [] as ((worker: Worker) => void)[]
@@ -36,7 +39,7 @@ export abstract class ViterPool<Input = void> extends Base {
 		super()
 	}
 
-	call(method: string, args: any[]) {
+	@action call(method: string, args: any[]) {
 		const worker = this.poolCapture()
 
 		toSync(worker).postMessage({
@@ -44,7 +47,7 @@ export abstract class ViterPool<Input = void> extends Base {
 			constructor: this.constructor.name,
 			input: this.input,
 			method,
-			args
+			args,
 		} satisfies ViterWorkerCall)
 
 		const result = tygerEventNext(worker, 'message')[0]
@@ -61,7 +64,7 @@ export abstract class ViterPool<Input = void> extends Base {
 	}
 
 	@dict worker(i: number) {
-		return new Worker(viterWorkerUrl)
+		return new Worker(new URL(viterWorkerUrl))
 	}
 
 	@dict workerTaken(i: number, next?: boolean) {

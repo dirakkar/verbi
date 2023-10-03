@@ -12,101 +12,108 @@ import {tygerEvent} from './tyger-event'
 import {toAsync, toSync} from './to'
 import {ansiControl} from './ansi-control'
 import {Atom} from './atom'
+import {compare} from './compare'
 
 const stdoutWrite = toSync((text: string) => {
-    return new Promise(res => {
-        process.stdout.write(text, res)
-    })
+	return new Promise(res => {
+		process.stdout.write(text, res)
+	})
 }, 'stdoutWrite')
 
 export class ViterViewRenderer extends Base {
-    node() {
-        return null! as ViterViewNode
-    }
+	node() {
+		return null! as ViterViewNode
+	}
 
-    @cell writeLoop() {
-        process.on('exit', () => this.stop())
+	@cell writeLoop() {
+		process.on('exit', () => this.stop())
 
-        return new Timer(16, () => toAsync(this).write(), true)
-    }
+		return new Timer(16, () => toAsync(this).write(), true)
+	}
 
-    @cell write(): number {
-        tygerEvent(process.stdout, 'resize')
-        tygerEvent(process.stdin, 'data')
+	@cell write() {
+		tygerEvent(process.stdout, 'resize')
+		tygerEvent(process.stdin, 'data')
 
-        const columns = process.stdout.columns ?? 80
-		const columnsPrev = Atom.peek(() => this.write()) ?? columns
-		const resized = columnsPrev !== columns
-
+		const columns = process.stdout.columns ?? 80
 		const rows = this.render(columns, this.node())
 
-        stdoutWrite(ansiControl({
-            erase: resized ? 'entire' : 'down',
-            cursorAbsolute: [0, resized ? 0 : null],
-			cursorRelative: [0, resized ? 0 : -(rows.length - 1)],
-            cursorVisible: false,
-        }) + rows.join('\n'))
+		const result = {columns, rows: rows.length}
+		const resultPrev = Atom.peek(() => this.write()) ?? result
+		const changed = !compare(result, resultPrev)
 
-		return columns
-    }
+		stdoutWrite(ansiControl.cursorHide + ansiControl.moveTo(0))
 
-    stop() {
-        process.stdout.write(ansiControl({
-            cursorVisible: true,
-        }))
-    }
+		if (changed) {
+			stdoutWrite(ansiControl.eraseScreen + ansiControl)
+		} else {
+			// FIXME
+			// stdoutWrite(ansiControl.erase(rows.length + 2) + ansiControl.cursorUp(rows.length + 1))
+		}
 
-    dispose() {
-        this.writeLoop().dispose()
-        this.stop()
-    }
+		stdoutWrite(rows.join('\n') + '\n')
 
-    render(c: number, node: ViterViewNode): string[] {
-        if (!node) return []
-        if (typeof node === 'number') node = node.toString()
-        if (typeof node === 'string') return this.renderString(c, node)
-        if (node.type === 'raw') return this.renderRaw(c, node.text)
-        if (node.type === 'vertical') return this.renderVertical(c, node.items)
-        if (node.type === 'pad') return this.renderPad(c, node.items)
-        if (node.type === 'list') return this.renderList(c, node.ordered, node.items)
-        if (node.type === 'dict') return this.renderDict(c, node.items)
+		return result
+	}
+
+	stop() {
+		process.stdout.write(ansiControl.cursorShow)
+	}
+
+	dispose() {
+		this.writeLoop().dispose()
+		this.stop()
+	}
+
+	render(c: number, node: ViterViewNode): string[] {
+		if (!node) return []
+		if (typeof node === 'number') node = node.toString()
+		if (typeof node === 'string') return this.renderString(c, node)
+		if (node.type === 'raw') return this.renderRaw(c, node.text)
+		if (node.type === 'vertical') return this.renderVertical(c, node.items)
+		if (node.type === 'pad') return this.renderPad(c, node.items)
+		if (node.type === 'list') return this.renderList(c, node.ordered, node.items)
+		if (node.type === 'dict') return this.renderDict(c, node.items)
 		if (node.type === 'section') return this.renderSection(c, node.title, node.content)
 
-        throw new Error('Unreachable!')
-    }
+		throw new Error('Unreachable!')
+	}
 
-    renderString(c: number, string: string) {
-        return this.renderRaw(c, ansiTemplate(string))
-    }
+	renderString(c: number, string: string) {
+		return this.renderRaw(c, ansiTemplate(string))
+	}
 
-    renderRaw(c: number, string: string) {
-        return ansiWrap(string, c)
-    }
+	renderRaw(c: number, string: string) {
+		return ansiWrap(string, c)
+	}
 
-    renderVertical(c: number, items: readonly ViterViewNode[]) {
-        return items.flatMap(item => {
-            if (!item) return []
-            return this.render(c, item)
-        })
-    }
+	renderVertical(c: number, items: readonly ViterViewNode[]) {
+		return items.flatMap(item => {
+			if (!item) return []
+			return this.render(c, item)
+		})
+	}
 
-    renderPad(c: number, items: readonly ViterViewNode[]) {
-        return ['', ...items.flatMap(node => {
-            if (!node) return []
+	renderPad(c: number, items: readonly ViterViewNode[]) {
+		return [
+			'',
+			...items.flatMap(node => {
+				if (!node) return []
 
-			return this.render(c - 4, node)
-				.map(row => '  ' + row + '  ')
-				.concat('')
-        })]
-    }
+				return this.render(c - 4, node)
+					.map(row => '  ' + row + '  ')
+					.concat('')
+			}),
+		]
+	}
 
-    renderList(c: number, ordered: boolean, items: readonly ViterViewNode[]) {
-        items = items.filter(Boolean)
+	renderList(c: number, ordered: boolean, items: readonly ViterViewNode[]) {
+		items = items.filter(Boolean)
 
-        const markers = items.map((node, i) => {
+		const markers = items.map((node, i) => {
 			let marker: string
 
-            if ((node as any).type === 'list') marker = ' '
+			if ((node as any).type === 'list') marker = ' '
 			else if (ordered) marker = marker = `${i + 1}.`
 			else marker = '•'
 
@@ -118,7 +125,7 @@ export class ViterViewRenderer extends Base {
 		return items.flatMap((node, i) => {
 			const marker = markers[i].padStart(markerColumns, ' ') + ' '
 			const rows = this.render(c - marker.length - 1, node)
-            return rows.flatMap((row, i) => {
+			return rows.flatMap((row, i) => {
 				let prefix: string
 
 				if (i === 0) {
@@ -130,10 +137,10 @@ export class ViterViewRenderer extends Base {
 				return prefix + row
 			})
 		})
-    }
+	}
 
-    renderDict(c: number, items: RecEntries<ViterViewNode>) {
-        const keys = items.map(([key]) => ansiWrap(key, 30))
+	renderDict(c: number, items: RecEntries<ViterViewNode>) {
+		const keys = items.map(([key]) => ansiWrap(key, 30))
 		const keyLongest = Math.max(...keys.flat().map(x => ansiStrip(x).length))
 
 		const valueColumns = c - keyLongest - 1
@@ -152,16 +159,14 @@ export class ViterViewRenderer extends Base {
 				return ' '.repeat(keyLongest + 1) + value
 			})
 		}).flat(2)
-    }
+	}
 
 	renderSection(c: number, title: string, content: ViterViewNode) {
 		if (!content) return []
 
 		return [
 			...this.renderString(c, ansi.bold(title)),
-			...this.render(c - 2, content)
-				.map(row => '  ' + row),
+			...this.render(c - 2, content).map(row => '  ' + row),
 		]
 	}
 }
-

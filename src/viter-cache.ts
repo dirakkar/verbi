@@ -57,7 +57,7 @@ export class ViterCache extends Base {
 		return this.store().drop(this.task())
 	}
 
-	version() {
+	@cell version() {
 		const files = this.inputFiles()
 
 		for (const file of files) {

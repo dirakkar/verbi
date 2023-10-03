@@ -12,14 +12,16 @@ export interface ViterWorkerCall {
 worker_threads.parentPort?.on('message', async (message: ViterWorkerCall) => {
 	const module = await import(message.url)
 	const constructor = module[message.constructor]
-	const instance = constructor.fromId(message.input)
+	const instance = constructor.create(message.input)
 	const method = message.method
 
 	try {
-		return await toAsync(instance)[method](...message.args)
+		var result = await toAsync(instance)[method](...message.args)
 	} catch (err) {
-		return err
+		result = err
 	}
+
+	worker_threads.parentPort!.postMessage(result)
 })
 
 export const viterWorkerUrl = import.meta.url

@@ -1,4 +1,4 @@
-import rollup from 'rollup'
+import * as rollup from 'rollup'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import typescript from 'rollup-plugin-typescript2'
 import {Base} from './base'

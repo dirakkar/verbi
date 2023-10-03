@@ -1,6 +1,8 @@
 import tty from 'node:tty'
 import {Rec} from './rec'
 
+export const AnsiEsc = '\u001B['
+
 export const ansiFormats = {
 	reset: [0, 0],
 	bold: [1, 22],
@@ -82,7 +84,8 @@ function createAnsi(formatsBase: AnsiFormat[]): Ansi {
 
 		for (const format of (formatsBase as typeof formats).concat(formats)) {
 			if (!format) continue
-			string = '\u001B[' + format[0] + 'm' + string + '\u001B[' + format[1] + 'm'
+			const [open, close] = ansiFormats[format]
+			string = AnsiEsc + open + 'm' + string + AnsiEsc + close + 'm'
 		}
 		return string
 	}
