@@ -1,6 +1,6 @@
 import {Formula} from './formula'
 
-export interface Decorator<Store> {
+export type Decorator<Store> = {
 	<F extends Formula>(name: string, formula: F): F & {get store(): Store | undefined}
 	(host: object, key: string, descr?: TypedPropertyDescriptor<Formula>): TypedPropertyDescriptor<Formula>
 }

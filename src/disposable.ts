@@ -1,7 +1,6 @@
-export interface Disposable {
+export type Disposable = {
 	dispose(): void
 }
 
-export function disposableIs(val: unknown): val is Disposable {
-	return !!val && typeof (val as any).dispose === 'function'
-}
+export let disposableIs = (v: unknown): v is Disposable =>
+	!!v && typeof (v as any).dispose === 'function'

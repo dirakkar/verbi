@@ -1,4 +1,4 @@
-export interface Typeofs {
+export type Typeofs = {
 	null: null
 	undefined: undefined
 	boolean: boolean

@@ -1,10 +1,10 @@
-export interface TestReport {
+export type TestReport = {
 	total: number
 	skipped: string[]
 	failed: TestFailure[]
 }
 
-export interface TestFailure {
+export type TestFailure = {
 	id: string
 	message: string | null
 	expected: string | null

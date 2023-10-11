@@ -1,6 +1,6 @@
 import {AnsiFormat, ansi, ansiFormatIs} from './ansi'
 
-export interface AnsiTemplateChunk {
+export type AnsiTemplateChunk = {
 	formats?: AnsiFormat[]
 	text: string
 }

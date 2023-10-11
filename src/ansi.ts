@@ -39,7 +39,7 @@ export type AnsiFormat = keyof typeof ansiFormats
 
 export let ansiFormatIs = (v: string): v is AnsiFormat => v in ansiFormats
 
-export interface Ansi {
+export type Ansi = {
 	(string: string, ...formats: (AnsiFormat | null | undefined | false)[]): string
 
 	reset: Ansi

@@ -38,7 +38,7 @@ export namespace assert {
 		message = 'Values must not be structurally equal',
 	) => isTrue(!compare(got, forbidden), {got, message})
 
-	interface ThrowsConfig {
+	export type ThrowsConfig = {
 		message?: string
 		valid?: Function | RegExp
 	}
@@ -144,7 +144,7 @@ export namespace assert {
 	}
 }
 
-export interface AssertionConfig {
+export type AssertionConfig = {
 	message: string
 	expected?: unknown
 	got?: unknown

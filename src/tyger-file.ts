@@ -7,23 +7,10 @@ import {cell} from './cell'
 import {decorator} from './decorator'
 import {action} from './action'
 
-export class TygerFileError extends Error {
-	constructor(public path: string, cause?: any) {
-		super(cause, {cause})
-	}
-}
-
-let withFs = decorator('withFs', formula => function (this: TygerFile, ...args) {
-	try {
-		return formula.apply(this, args)
-	} catch (err: any) {
-		throw new TygerFileError(this.path, err)
-	}
-})
 
 export type TygerFileType = 'file' | 'dir' | 'link'
 
-export interface TygerFileStat {
+export type TygerFileStat = {
 	type: TygerFileType
 	size: number | bigint
 	atime: Date
@@ -48,6 +35,20 @@ let statFrom = (path: string, native: fs.Stats | fs.BigIntStats): TygerFileStat 
 		ctime: native.ctime,
 	}
 }
+
+export class TygerFileError extends Error {
+	constructor(public path: string, cause?: any) {
+		super(cause, {cause})
+	}
+}
+
+let withFs = decorator('withFs', formula => function (this: TygerFile, ...args) {
+	try {
+		return formula.apply(this, args)
+	} catch (err: any) {
+		throw new TygerFileError(this.path, err)
+	}
+})
 
 export class TygerFile extends Model {
 	static from(filepath: string) {

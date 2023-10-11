@@ -1,7 +1,7 @@
 import worker_threads from 'node:worker_threads'
 import {toAsync} from './to'
 
-export interface ViterWorkerCall {
+export type ViterWorkerCall = {
 	url: string
 	constructor: string
 	input: unknown

@@ -1,6 +1,6 @@
 import {Formula, formulaName} from './formula'
 
-export interface MockCall<F extends Formula> {
+export type MockCall<F extends Formula> = {
 	i: Parameters<F>
 	o: ReturnType<F>
 }

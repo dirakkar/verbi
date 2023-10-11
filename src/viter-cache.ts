@@ -7,7 +7,7 @@ import {toSync} from './to'
 import {TygerFile} from './tyger-file'
 import {valKey} from './val'
 
-export interface ViterCacheStore {
+export type ViterCacheStore = {
 	download(task: string, version: string, dir: string): boolean
 	upload(task: string, version: string, dir: string): void
 	drop(task: string): boolean

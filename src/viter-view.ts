@@ -67,7 +67,7 @@ export namespace viterView {
 		items,
 	} satisfies ViterViewNode)
 
-	export interface SectionConfig {
+	export type SectionConfig = {
 		title: string
 		content: ViterViewNode
 	}

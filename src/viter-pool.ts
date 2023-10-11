@@ -6,7 +6,7 @@ import {dict} from './dict'
 import {formulaIs} from './formula'
 import {rethrow} from './rethrow'
 import {toSync} from './to'
-import {tygerEventNext} from './tyger-event'
+import {tygerEventWait} from './tyger-event'
 import {arrayMake} from './array'
 import {ViterWorkerCall, viterWorkerUrl} from './viter-worker'
 import {action} from './action'
@@ -50,7 +50,7 @@ export abstract class ViterPool<Input = void> extends Model {
 			args,
 		} satisfies ViterWorkerCall)
 
-		let result = tygerEventNext(worker, 'message')[0]
+		let result = tygerEventWait(worker, 'message')[0]
 
 		this.poolRelease(worker)
 

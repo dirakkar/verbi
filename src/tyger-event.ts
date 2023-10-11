@@ -4,7 +4,7 @@ import {promiseMake} from './promise'
 import {toSync} from './to'
 import {tygerNow} from './tyger-now'
 
-export interface TygerEventReturn<T> {
+export type TygerEventReturn<T> = {
 	at: number
 	payload: T
 }
@@ -16,7 +16,7 @@ export let tygerEvent = <
 	return eventStore({target, event}) as TygerEventReturn<ListenerPayload<Target, Event>> | undefined
 }
 
-interface EventConfig {
+type EventConfig = {
 	target: ListenerTarget
 	event: string
 }
@@ -35,14 +35,14 @@ let eventListen = dict('eventListen', (config: EventConfig) => new Listener(
 	}),
 ))
 
-export let tygerEventNext = toSync((target: ListenerTarget, event: string) => {
+export let tygerEventWait = toSync((target: ListenerTarget, event: string) => {
 	let promise = promiseMake<any>(() => listener.dispose())
 	let listener = new Listener(target, event, (...payload) => {
 		promise.resolve(payload)
 		listener.dispose()
 	})
 	return promise
-}, 'tygerEventNext') as <
+}, 'tygerEventWait') as <
 	Target extends ListenerTarget,
 	Event extends string,
 >(target: Target, event: Event) => ListenerPayload<Target, Event>
