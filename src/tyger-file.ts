@@ -13,7 +13,7 @@ export class TygerFileError extends Error {
 	}
 }
 
-const withFs = decorator('withFs', formula => function (this: TygerFile, ...args) {
+let withFs = decorator('withFs', formula => function (this: TygerFile, ...args) {
 	try {
 		return formula.apply(this, args)
 	} catch (err: any) {
@@ -31,7 +31,7 @@ export interface TygerFileStat {
 	mtime: Date
 }
 
-function statFrom(path: string, native: fs.Stats | fs.BigIntStats): TygerFileStat {
+let statFrom = (path: string, native: fs.Stats | fs.BigIntStats): TygerFileStat => {
 	let type: TygerFileType | undefined
 
 	if (native.isFile()) type = 'file'
@@ -93,7 +93,7 @@ export class TygerFile extends Model {
 
 		if (next) return next!
 
-		const stat = fs.statSync(this.path, {throwIfNoEntry: false})
+		let stat = fs.statSync(this.path, {throwIfNoEntry: false})
 		if (!stat) return null
 		return statFrom(this.path, stat)
 	}
@@ -104,7 +104,7 @@ export class TygerFile extends Model {
 	 * Pushing `false` to an existing file removes it.
 	 */
 	@cell @withFs exists(next?: boolean) {
-		const prev = !!this.stat()
+		let prev = !!this.stat()
 		if (next === undefined) return prev
 		if (next === prev) return prev
 
@@ -125,7 +125,7 @@ export class TygerFile extends Model {
 	}
 
 	@cell watch() {
-		const watcher = chokidar.watch(this.path, {
+		let watcher = chokidar.watch(this.path, {
 			persistent: true,
 			depth: 0,
 			ignoreInitial: true,
@@ -134,7 +134,7 @@ export class TygerFile extends Model {
 			},
 		})
 			.on('all', (event, filepath) => {
-				const file = TygerFile.from(filepath)
+				let file = TygerFile.from(filepath)
 
 				file.stat(null)
 
@@ -150,7 +150,7 @@ export class TygerFile extends Model {
 
 	@cell @withFs text(next?: string, virtual?: 'virtual') {
 		if (virtual) {
-			const now = new Date
+			let now = new Date
 			this.stat({
 				type: 'file',
 				size: 0,
@@ -171,7 +171,7 @@ export class TygerFile extends Model {
 
 	@cell @withFs buffer(next?: Uint8Array, virtual?: 'virtual') {
 		if (virtual) {
-			const now = new Date
+			let now = new Date
 			this.stat({
 				type: 'file',
 				size: 0,
@@ -215,15 +215,15 @@ export class TygerFile extends Model {
 	 * Unlinks all nested files.
 	 */
 	@withFs purge() {
-		for (const kid of this.kids()) {
+		for (let kid of this.kids()) {
 			kid.exists(false)
 		}
 	}
 
 	find(include?: RegExp, exclude?: RegExp) {
-		const result: TygerFile[] = []
+		let result: TygerFile[] = []
 
-		for (const kid of this.kids()) {
+		for (let kid of this.kids()) {
 			if (exclude?.test(kid.path)) continue
 			if (!include || include.test(kid.path)) result.push(kid)
 			if (kid.type() === 'dir') result.push(...kid.find(include, exclude))

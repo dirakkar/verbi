@@ -16,17 +16,15 @@ export type ViterViewNode =
 	| {type: 'section'; title: string; content: ViterViewNode}
 
 export namespace viterView {
-	export function raw(text: string) {
-		return {
-			type: 'raw',
-			text,
-		} satisfies ViterViewNode
-	}
+	export let raw = (text: string) => ({
+		type: 'raw',
+		text,
+	} satisfies ViterViewNode)
 
 	export type ListConfig =
 		| ViterViewNode[]
 		| {ordered: boolean; items: ViterViewNode[]}
-	export function list(config: ListConfig) {
+	export let list = (config: ListConfig) => {
 		if (Array.isArray(config)) {
 			config = {ordered: false, items: config}
 		}
@@ -41,7 +39,7 @@ export namespace viterView {
 	type DictConfig =
 		| RecEntries<ViterViewNode>
 		| Rec<ViterViewNode>
-	export function dict(config: DictConfig) {
+	export let dict = (config: DictConfig) => {
 		if (recIs(config)) {
 			config = Object.entries(config)
 		}
@@ -53,7 +51,7 @@ export namespace viterView {
 	}
 
 	export type PadConfig = ViterViewNode | ViterViewNode[]
-	export function pad(config: PadConfig) {
+	export let pad = (config: PadConfig) => {
 		if (!Array.isArray(config)) {
 			config = [config]
 		}
@@ -64,22 +62,18 @@ export namespace viterView {
 		} satisfies ViterViewNode
 	}
 
-	export function vertical(items: ViterViewNode[]) {
-		return {
-			type: 'vertical',
-			items,
-		} satisfies ViterViewNode
-	}
+	export let vertical = (items: ViterViewNode[]) => ({
+		type: 'vertical',
+		items,
+	} satisfies ViterViewNode)
 
 	export interface SectionConfig {
 		title: string
 		content: ViterViewNode
 	}
-	export function section(config: SectionConfig) {
-		return {
-			type: 'section',
-			title: config.title,
-			content: config.content,
-		} satisfies ViterViewNode
-	}
+	export let section = (config: SectionConfig) => ({
+		type: 'section',
+		title: config.title,
+		content: config.content,
+	} satisfies ViterViewNode)
 }

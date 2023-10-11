@@ -1,4 +1,4 @@
-const caught = new WeakSet<any>
+let caught = new WeakSet<any>
 
 type ErrorHandleResult = [display: string | null, rethrow: Error]
 
@@ -6,15 +6,15 @@ type ErrorHandleResult = [display: string | null, rethrow: Error]
  * Returns a tuple of type `[display, rethrow]` where `display` is serialized representation of an error and `rethrow` is what you should rethrow (identical to passed value unless it's not an Error object).
  * It uses a global WeakSet of handled errors, so `display` is set to null if passed error was already handled.
  */
-export function errorHandle(error: unknown): ErrorHandleResult {
+export let errorHandle = (error: unknown): ErrorHandleResult => {
 	if (caught.has(error)) {
 		return [null, error as Error]
 	}
 
 	if (error instanceof Error === false) {
 		// wrap it with Error so outer scopes won't display the same thing
-		const str = String(error)
-		const rethrow = new Error(str, {cause: error})
+		let str = String(error)
+		let rethrow = new Error(str, {cause: error})
 		caught.add(rethrow)
 		return [str, rethrow]
 	}
@@ -23,7 +23,7 @@ export function errorHandle(error: unknown): ErrorHandleResult {
 	return [errorSerialize(error), error as Error]
 }
 
-export function errorSerialize(error: unknown) {
+export let errorSerialize = (error: unknown) => {
 	let result = String(error)
 
 	if (error instanceof Error) {
@@ -33,7 +33,7 @@ export function errorSerialize(error: unknown) {
 	return result
 }
 
-export function errorStack(error: any, prefix = '') {
+export let errorStack = (error: any, prefix = '') => {
 	if (error instanceof Error === false) {
 		return null
 	}
@@ -42,7 +42,7 @@ export function errorStack(error: any, prefix = '') {
 		.split('\n')
 		.slice(1)
 		.filter(line => {
-			const ignore = [
+			let ignore = [
 				'node:internal',
 			]
 

@@ -2,12 +2,12 @@ import {action} from './action'
 import {Model} from './model'
 import {toSync} from './to'
 
-export const tygerFetch = toSync(function tygerFetch(
+export let tygerFetch = toSync((
 	info: RequestInfo,
 	init: RequestInit = {},
 	fetch = globalThis.fetch
-) {
-	const ctrl = new AbortController
+) => {
+	let ctrl = new AbortController
 	let abortable = true
 
 	return Object.assign(
@@ -24,14 +24,14 @@ export const tygerFetch = toSync(function tygerFetch(
 			}
 		} },
 	)
-})
+}, 'tygerFetch')
 
 export class TygerFetchError extends Error {
 	status!: number
 }
 
 export type TygerFetchResponseStatus = typeof TygerFetchResponseStatus[number]
-export const TygerFetchResponseStatus = [
+export let TygerFetchResponseStatus = [
 	'Unknown',
 	'Informational',
 	'Successful',
@@ -62,7 +62,7 @@ export class TygerFetchResponse extends Model {
 	 */
 	success() {
 		if (this.status() !== 'Successful') {
-			const err = new TygerFetchError(this.statusText())
+			let err = new TygerFetchError(this.statusText())
 			err.status = this.statusCode()
 			throw err
 		}

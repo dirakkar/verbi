@@ -1,57 +1,64 @@
+// here we use function declaration syntax for assertion functions because of this issue:
+// https://github.com/microsoft/TypeScript/issues/34523
+
 import {Typeofs, typeof_} from './typeof'
 import {compare} from './compare'
 
 export namespace assert {
-	function isTrue(
+	let isTrue = (
 		value: boolean,
-		config: AssertionConfig
-	): asserts value is true {
+		config: AssertionConfig,
+	) => {
 		if (value !== true) {
 			throw new Assertion(config)
 		}
 	}
 
-	export function is<T>(
+	export let is = <T>(
 		got: T,
 		expected: T,
-		message = 'Values must be equal'
-	) {
-		isTrue(Object.is(got, expected), {expected, got, message})
-	}
+		message = 'Values must be equal',
+	) => isTrue(Object.is(got, expected), {expected, got, message})
 
-	export function isnt<T>(
+	export let isnt = <T>(
 		got: T,
 		forbidden: T,
-		message = 'Values must not be equal'
-	) {
-		isTrue(!Object.is(got, forbidden), {got, message})
-	}
+		message = 'Values must not be equal',
+	) => isTrue(!Object.is(got, forbidden), {got, message})
 
-	export function like<T>(
+	export let like = <T>(
 		got: T,
 		expected: T,
-		message = 'Values must be structurally equal'
-	) {
-		isTrue(compare(got, expected), {got, expected, message})
-	}
+		message = 'Values must be structurally equal',
+	) => isTrue(compare(got, expected), {got, expected, message})
 
-	export function notLike<T>(
+	export let notLike = <T>(
 		got: T,
 		forbidden: T,
-		message = 'Values must not be structurally equal'
-	) {
-		isTrue(!compare(got, forbidden), {got, message})
-	}
+		message = 'Values must not be structurally equal',
+	) => isTrue(!compare(got, forbidden), {got, message})
 
 	interface ThrowsConfig {
 		message?: string
 		valid?: Function | RegExp
 	}
 
-	export function throws(
+	export function isInstance<T>(
+		value: unknown,
+		constructor: Function & {prototype: T},
+		message = `Value must be an instance of "${constructor.name}"`,
+	): asserts value is T {
+		return isTrue(value instanceof constructor, {
+			message,
+			expected: constructor.name,
+			got: value?.constructor.name,
+		})
+	}
+
+	export let throws = (
 		block: () => void,
 		{message, valid}: ThrowsConfig = {}
-	) {
+	) => {
 		let error: any
 		let caught = false
 
@@ -73,10 +80,10 @@ export namespace assert {
 		return error
 	}
 
-	export async function throwsAsync(
+	export let throwsAsync = async (
 		block: () => void,
 		{message, valid}: ThrowsConfig = {}
-	) {
+	) => {
 		let error: any
 		let caught = false
 
@@ -98,36 +105,23 @@ export namespace assert {
 		return error
 	}
 
-	export function matches(
+	export let matches = (
 		string: string,
 		pattern: RegExp,
 		message = `String must match pattern "${pattern}"`
-	) {
-		isTrue(pattern.test(string), {
-			message,
-			expected: pattern,
-			got: string,
-		})
-	}
+	) => isTrue(pattern.test(string), {
+		message,
+		expected: pattern,
+		got: string,
+	})
 
-	export function isInstance<T>(
-		value: unknown,
-		ctor: Function & {prototype: T},
-		message = `Value must be an instance of "${ctor.name}"`
-	): asserts value is T {
-		isTrue(value instanceof ctor, {
-			message,
-			expected: ctor.name,
-			got: value?.constructor.name,
-		})
-	}
 
 	export function type<T extends keyof Typeofs>(
 		value: unknown,
 		type: T,
 		message = `Value must have type "${type}"`
 	): asserts value is Typeofs[T] {
-		const got = typeof_(value)
+		let got = typeof_(value)
 
 		isTrue(got === type, {
 			message,
@@ -141,7 +135,7 @@ export namespace assert {
 		type: T,
 		message = `Value must not have type "${type}"`
 	): asserts value is Typeofs[Exclude<keyof Typeofs, T>] {
-		const got = typeof_(value)
+		let got = typeof_(value)
 
 		isTrue(got !== type, {
 			message,

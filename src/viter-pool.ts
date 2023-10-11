@@ -26,7 +26,7 @@ export abstract class ViterPool<Input = void> extends Model {
 	mirror = worker_threads.isMainThread
 		? new Proxy(this, {
 				get: (_, key: string) => {
-					const val = (this as any)[key]
+					let val = (this as any)[key]
 					if (!formulaIs(val)) return val
 					return (...args: any) => this.call(key, args)
 				},
@@ -40,7 +40,7 @@ export abstract class ViterPool<Input = void> extends Model {
 	}
 
 	@action call(method: string, args: any[]) {
-		const worker = this.poolCapture()
+		let worker = this.poolCapture()
 
 		toSync(worker).postMessage({
 			url: this.url(),
@@ -50,7 +50,7 @@ export abstract class ViterPool<Input = void> extends Model {
 			args,
 		} satisfies ViterWorkerCall)
 
-		const result = tygerEventNext(worker, 'message')[0]
+		let result = tygerEventNext(worker, 'message')[0]
 
 		this.poolRelease(worker)
 
@@ -59,7 +59,7 @@ export abstract class ViterPool<Input = void> extends Model {
 	}
 
 	@cell workerIds() {
-		const max = os.availableParallelism()
+		let max = os.availableParallelism()
 		return arrayMake(max, i => i)
 	}
 
@@ -72,7 +72,7 @@ export abstract class ViterPool<Input = void> extends Model {
 	}
 
 	poolCapture() {
-		const free = this.workerIds().find(id => !this.workerTaken(id))
+		let free = this.workerIds().find(id => !this.workerTaken(id))
 		if (free === undefined) return toSync(this).poolSchedule()
 		this.workerTaken(free, true)
 		return this.worker(free)
@@ -85,13 +85,13 @@ export abstract class ViterPool<Input = void> extends Model {
 	}
 
 	poolRelease(worker: Worker) {
-		const id = this.workerIds().find(id => this.worker(id) === worker)
+		let id = this.workerIds().find(id => this.worker(id) === worker)
 		if (id == null || !this.workerTaken(id)) {
 			throw new Error('Attempted to release a worker that is not captured')
 		}
 		this.workerTaken(id, false)
 
-		const queuing = this.queue.shift()
+		let queuing = this.queue.shift()
 		if (queuing) queuing(worker)
 	}
 }

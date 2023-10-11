@@ -1,18 +1,18 @@
 // https://github.com/chalk/wrap-ansi/blob/main/index.js
 
-const Escapes = ['\u001B', '\u009B']
+let Escapes = ['\u001B', '\u009B']
 
-const End = 39
-const AnsiEscapeBell = '\u0007'
-const AnsiCsi = '['
-const AnsiOsc = ']'
-const AnsiSgrTerminator = 'm'
-const AnsiEscapeLink = `${AnsiOsc}8;;`
+let End = 39
+let AnsiEscapeBell = '\u0007'
+let AnsiCsi = '['
+let AnsiOsc = ']'
+let AnsiSgrTerminator = 'm'
+let AnsiEscapeLink = `${AnsiOsc}8;;`
 
 /**
  * Wrap an ANSI-formatted string.
  */
-export function ansiWrap(string: string, columns: number) {
+export let ansiWrap = (string: string, columns: number) => {
 	return string
 		.normalize()
 		.replaceAll('\r\n', '\n')
@@ -20,12 +20,12 @@ export function ansiWrap(string: string, columns: number) {
 		.flatMap(row => ansiWrapRow(row, columns))
 }
 
-function ansiWrapRow(row: string, columns: number) {}
+let ansiWrapRow = (row: string, columns: number) => {}
 
-function wrapCode(code: string) {
+let wrapCode = (code: string) => {
 	return Escapes[0] + AnsiCsi + code + AnsiSgrTerminator
 }
 
-function wrapHyperlink(uri: string) {
+let wrapHyperlink = (uri: string) => {
 	return Escapes[0] + AnsiEscapeLink + uri + AnsiEscapeBell
 }

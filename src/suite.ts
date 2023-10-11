@@ -2,24 +2,25 @@ import {errorStack} from './error'
 import {Assertion} from './assert'
 import {TestFailure, testHandler} from './test'
 import {valSerialize} from './val'
+import {arrayMapAsync} from './array'
 
-interface Case {
+export type SuiteTest = {
 	id: string
-	run: () => void
+	run: () => void | Promise<void>
 }
 
-const queue: Case[] = []
-const skipped: string[] = []
+export type SuiteTests = Record<string, () => void | Promise<void>>
+
+let testQueue: SuiteTest[] = []
+let skipped: string[] = []
 
 let scheduled = false
 
-export type SuiteCases = Record<string, () => void | Promise<void>>
-
-export function suite(suiteName: string, cases: SuiteCases) {
-	for (const key in cases) {
-		queue.push({
+export function suite(suiteName: string, tests: SuiteTests) {
+	for (let key in tests) {
+		testQueue.push({
 			id: `${suiteName}/${key.replaceAll('_', '-')}`,
-			run: cases[key],
+			run: tests[key],
 		})
 	}
 
@@ -29,26 +30,24 @@ export function suite(suiteName: string, cases: SuiteCases) {
 	}
 }
 
-suite.skip = (name: string, tests?: SuiteCases) => {
+suite.skip = (name: string, tests?: SuiteTests) => {
 	skipped.push(name)
 }
 
-async function runAll() {
-	const failed: TestFailure[] = []
+let runAll = async () => {
+	let failed: TestFailure[] = []
 
-	await Promise.all(queue.map(async kase => {
+	await arrayMapAsync(testQueue, async test => {
 		try {
-			await kase.run()
+			await test.run()
 		} catch (err: any) {
-			const failure: TestFailure = {
-				id: kase.id,
+			let failure: TestFailure = {
+				id: test.id,
 				message: err.message ?? String(err),
 				location: errorStack(err),
 				expected: null,
 				got: null,
 			}
-
-			throw err
 
 			if (err instanceof Assertion) {
 				failure.location = failure.location!
@@ -66,10 +65,10 @@ async function runAll() {
 
 			failed.push(failure)
 		}
-	}))
+	})
 
 	testHandler({
-		total: queue.length,
+		total: testQueue.length,
 		skipped,
 		failed,
 	})

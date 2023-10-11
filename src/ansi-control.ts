@@ -8,7 +8,7 @@ export namespace ansiControl {
 	/**
 	 * Set absolute cursor position.
 	 */
-	export function moveTo(x: number, y?: number | null) {
+	export let moveTo = (x: number, y?: number | null) => {
 		if (y == null) return AnsiEsc + (x + 1) + 'G'
 		return AnsiEsc + (y + 1) + ';' + (x + 1) + 'H'
 	}
@@ -16,7 +16,7 @@ export namespace ansiControl {
 	/**
 	 * Move cursor relatively.
 	 */
-	export function moveBy(x?: number | null, y?: number | null) {
+	export let moveBy = (x?: number | null, y?: number | null) => {
 		let result = ''
 
 		if (x! < 0) result += AnsiEsc + -x! + 'D'
@@ -28,16 +28,16 @@ export namespace ansiControl {
 		return result
 	}
 
-	export const cursorHide = AnsiEsc + '?25l'
+	export let cursorHide = AnsiEsc + '?25l'
 
-	export const cursorShow = AnsiEsc + '?25h'
+	export let cursorShow = AnsiEsc + '?25h'
 
-	export const eraseScreen = AnsiEsc + '2J'
+	export let eraseScreen = AnsiEsc + '2J'
 
 	/**
 	 * Erase from the current cursor position up the specified amount of rows (defaults to 1).
 	 */
-	export function erase(count = 1) {
+	export let erase = (count = 1) => {
 		if (count === 1) return AnsiEsc + '2K'
 
 		let result = ''
@@ -52,13 +52,9 @@ export namespace ansiControl {
 		return result
 	}
 
-	export const cursorLeft = AnsiEsc + 'G'
+	export let cursorLeft = AnsiEsc + 'G'
 
-	export function cursorUp(count = 1) {
-		return AnsiEsc + count + 'A'
-	}
+	export let cursorUp = (count = 1) => AnsiEsc + count + 'A'
 
-	export function cursorDown(count = 1) {
-		return AnsiEsc + count + 'B'
-	}
+	export let cursorDown = (count = 1) => AnsiEsc + count + 'B'
 }

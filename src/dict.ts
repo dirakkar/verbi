@@ -2,13 +2,13 @@ import {Atom, AtomTask} from './atom'
 import {decorator} from './decorator'
 import {valKey} from './val'
 
-export const dict = decorator<Map<string, DictAtom>>('dict', (formula, store) => function (...args) {
+export let dict = decorator<Map<string, DictAtom>>('dict', (formula, store) => function (...args) {
 	let atoms = store.get(this)
 	if (!atoms) {
 		store.set(this, (atoms = new Map))
 	}
 
-	const id = Atom.id(this, formula, valKey(args[0]))
+	let id = Atom.id(this, formula, valKey(args[0]))
 
 	let atom = atoms.get(id)
 	if (!atom) {

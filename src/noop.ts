@@ -1,4 +1,4 @@
 /**
  * Does nothing.
  */
-export function noop() {}
+export let noop = () => {}

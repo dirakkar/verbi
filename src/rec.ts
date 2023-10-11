@@ -16,52 +16,46 @@ export type RecKeysMatching<T, Condition> = NonNullable<{
 /**
  * Transforms an object's key-value entries
  */
-export function recMapEntries<I extends {}, OK extends string, OV>(
+export let recMapEntries = <I extends {}, OK extends string, OV>(
 	rec: I,
-	mapper: (key: keyof I, value: I[keyof I]) => [key: OK, value: OV]
-) {
-	return Object.fromEntries(
-        recMap(rec, mapper)
-    ) as RecSimplify<Record<OK, OV>>
-}
+	mapper: (key: keyof I, value: I[keyof I]) => [key: OK, value: OV],
+) =>
+	Object.fromEntries(recMap(rec, mapper)) as RecSimplify<Record<OK, OV>>
 
 /**
  * Transforms an object's values
  */
-export function recMapValues<I extends {}, OV>(
+export let recMapValues = <I extends {}, OV>(
 	rec: I,
 	mapper: (value: I[keyof I], key: keyof I) => OV
-) {
-	return Object.fromEntries(
+) =>
+	Object.fromEntries(
 		Object.entries(rec).map(
 			([key, value]) => [key, mapper(value as any, key as any)]
 		)
 	) as RecSimplify<Record<keyof I, OV>>
-}
 
-export function recMap<I extends {}, O>(
+export let recMap = <I extends {}, O>(
     rec: I,
     mapper: (key: keyof I, value: I[keyof I]) => O,
-) {
-    return Object.entries(rec)
-        .map(([key, value]) => mapper(key as any, value as any)) as O[]
-}
+) => Object.entries(rec)
+    .map(([key, value]) => mapper(key as any, value as any)) as O[]
 
 /**
  * Checks whether a value is a plain object (not an instance of a class).
  */
 export function recIs(val: any): val is Rec {
 	if (typeof val !== 'object' || !val) return false
-	const proto = Reflect.getPrototypeOf(val)
+	let proto = Reflect.getPrototypeOf(val)
 	if (!proto) return true
 	return !Reflect.getPrototypeOf(proto)
 }
 
-export function recPick<T extends object, Key extends keyof T>(
+export let recPick = <T extends object, Key extends keyof T>(
 	rec: T,
 	keys: Key[] | ((key: keyof T, value: T[Key]) => key is Key)
-) {
-	const result = {} as RecSimplify<Pick<T, Key>>
+) => {
+	let result = {} as RecSimplify<Pick<T, Key>>
 
 	let keyList = keys as Key[]
 	if (typeof keys === 'function') {
@@ -69,7 +63,7 @@ export function recPick<T extends object, Key extends keyof T>(
 			.filter(key => keys(key as any, (rec as any)[key])) as Key[]
 	}
 
-	for (const key of keyList) {
+	for (let key of keyList) {
 		result[key] = rec[key]
 	}
 

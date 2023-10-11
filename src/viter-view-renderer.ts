@@ -14,7 +14,7 @@ import {ansiControl} from './ansi-control'
 import {Atom} from './atom'
 import {compare} from './compare'
 
-const stdoutWrite = toSync((text: string) => {
+let stdoutWrite = toSync((text: string) => {
 	return new Promise(res => {
 		process.stdout.write(text, res)
 	})
@@ -35,12 +35,12 @@ export class ViterViewRenderer extends Model {
 		tygerEvent(process.stdout, 'resize')
 		tygerEvent(process.stdin, 'data')
 
-		const columns = process.stdout.columns ?? 80
-		const rows = this.render(columns, this.node())
+		let columns = process.stdout.columns ?? 80
+		let rows = this.render(columns, this.node())
 
-		const result = {columns, rows: rows.length}
-		const resultPrev = Atom.peek(() => this.write()) ?? result
-		const changed = !compare(result, resultPrev)
+		let result = {columns, rows: rows.length}
+		let resultPrev = Atom.peek(() => this.write()) ?? result
+		let changed = !compare(result, resultPrev)
 
 		stdoutWrite(ansiControl.cursorHide + ansiControl.moveTo(0))
 
@@ -110,7 +110,7 @@ export class ViterViewRenderer extends Model {
 	renderList(c: number, ordered: boolean, items: readonly ViterViewNode[]) {
 		items = items.filter(Boolean)
 
-		const markers = items.map((node, i) => {
+		let markers = items.map((node, i) => {
 			let marker: string
 
 			if ((node as any).type === 'list') marker = ' '
@@ -120,11 +120,11 @@ export class ViterViewRenderer extends Model {
 			return marker
 		})
 
-		const markerColumns = Math.max(...markers.map(x => x.length))
+		let markerColumns = Math.max(...markers.map(x => x.length))
 
 		return items.flatMap((node, i) => {
-			const marker = markers[i].padStart(markerColumns, ' ') + ' '
-			const rows = this.render(c - marker.length - 1, node)
+			let marker = markers[i].padStart(markerColumns, ' ') + ' '
+			let rows = this.render(c - marker.length - 1, node)
 			return rows.flatMap((row, i) => {
 				let prefix: string
 
@@ -140,19 +140,19 @@ export class ViterViewRenderer extends Model {
 	}
 
 	renderDict(c: number, items: RecEntries<ViterViewNode>) {
-		const keys = items.map(([key]) => ansiWrap(key, 30))
-		const keyLongest = Math.max(...keys.flat().map(x => ansiStrip(x).length))
+		let keys = items.map(([key]) => ansiWrap(key, 30))
+		let keyLongest = Math.max(...keys.flat().map(x => ansiStrip(x).length))
 
-		const valueColumns = c - keyLongest - 1
-		const values = items.map(([, value]) => this.render(valueColumns, value))
+		let valueColumns = c - keyLongest - 1
+		let values = items.map(([, value]) => this.render(valueColumns, value))
 
 		return arrayMake(items.length, i => {
-			const keyRows = keys[i]
-			const valueRows = values[i]
+			let keyRows = keys[i]
+			let valueRows = values[i]
 
 			return arrayMake(Math.max(keyRows.length, valueRows.length), i => {
-				const key = ansiTemplate(keyRows[i])
-				const value = valueRows[i]
+				let key = ansiTemplate(keyRows[i])
+				let value = valueRows[i]
 
 				if (key && value) return ansi.bold(key.padStart(keyLongest, ' ')) + ' ' + value
 				if (key) return ansi.bold(key)

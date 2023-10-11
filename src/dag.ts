@@ -37,35 +37,35 @@ export class Dag<Node, Edge> {
 	}
 
 	uncycle(edgeWeight: (edge: Edge) => number) {
-		const checked: Node[] = []
+		let checked: Node[] = []
 
-		for (const node of this.nodes) {
-			const path: Node[] = []
+		for (let node of this.nodes) {
+			let path: Node[] = []
 
-			const visit = (from: Node): number => {
+			let visit = (from: Node): number => {
 				if (checked.includes(node)) return Number.MAX_SAFE_INTEGER
 
-				const index = path.lastIndexOf(from)
+				let index = path.lastIndexOf(from)
 				if (index > -1) {
-					const cycle = path.slice(index)
+					let cycle = path.slice(index)
 					return cycle.reduce((weight, node, i) => {
-						const edge = this.edgeOut(node, cycle[(i + 1) % cycle.length])!
+						let edge = this.edgeOut(node, cycle[(i + 1) % cycle.length])!
 						return Math.min(weight, edgeWeight(edge))
 					}, Number.MAX_SAFE_INTEGER)
 				}
 
 				path.push(from)
 
-				const deps = this.edgesOut.get(from)
+				let deps = this.edgesOut.get(from)
 				if (deps) {
-					for (const [to, edge] of deps) {
+					for (let [to, edge] of deps) {
 						if (to === from) {
 							this.unlink(from, to)
 							continue
 						}
 
-						const weightOut = edgeWeight(edge)
-						const min = visit(to)
+						let weightOut = edgeWeight(edge)
+						let min = visit(to)
 						if (weightOut > min) return min
 						if (weightOut === min) {
 							this.unlink(from, to)
@@ -87,17 +87,17 @@ export class Dag<Node, Edge> {
 	}
 
 	sorted() {
-		const sorted = new Set<Node>
+		let sorted = new Set<Node>
 
-		const visit = (node: Node) => {
+		let visit = (node: Node) => {
 			if (sorted.has(node)) return
-			const deps = this.edgesOut.get(node)
+			let deps = this.edgesOut.get(node)
 			if (deps) {
-				for (const dep of deps.keys()) visit(dep)
+				for (let dep of deps.keys()) visit(dep)
 			}
 			sorted.add(node)
 		}
 
-		for (const node of this.nodes) visit(node)
+		for (let node of this.nodes) visit(node)
 	}
 }

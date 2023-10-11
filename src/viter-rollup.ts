@@ -50,9 +50,9 @@ export class ViterRollup extends Model {
 	}
 	// TODO make it a virtual module when we get a manual invalidation API
 	@cell entry() {
-		const id = randomId()
+		let id = randomId()
 
-		const entries = TygerFile.from('.viter/entries')
+		let entries = TygerFile.from('.viter/entries')
 		entries.exists(true)
 
 		return entries.join(id)
@@ -75,7 +75,7 @@ export class ViterRollup extends Model {
 	}
 
 	@cell buildConfig() {
-		const resolvePlugin: rollup.Plugin = {
+		let resolvePlugin: rollup.Plugin = {
 			name: 'ViterRollup/resolvePlugin',
 			resolveId: (id, importer) => this.resolve(id, importer!),
 		}
@@ -96,7 +96,7 @@ export class ViterRollup extends Model {
 	@cell build() {
 		this.root().stat()
 
-		const build = toSync(rollup).rollup(this.buildConfig())
+		let build = toSync(rollup).rollup(this.buildConfig())
 
 		return Object.assign(build, { dispose() {
 			return build.close()
@@ -117,13 +117,13 @@ export class ViterRollup extends Model {
 	}
 
 	@cell write(output: TygerFile, plugins?: rollup.Plugin[]) {
-		const build = this.build()
-		const config = this.writeConfig(output, plugins)
+		let build = this.build()
+		let config = this.writeConfig(output, plugins)
 		return toSync(build).write(config).output
 	}
 
 	@cell watch(output: TygerFile, plugins?: rollup.Plugin[]) {
-		const watcher = rollup.watch({
+		let watcher = rollup.watch({
 			...this.buildConfig(),
 			output: this.writeConfig(output, plugins),
 			watch: {

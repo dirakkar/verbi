@@ -8,7 +8,7 @@ export interface MockCall<F extends Formula> {
 /**
  * Wrap a function to intercept and store each calls inputs and outputs in the `calls` property
  */
-export function mock<F extends Formula>(f: F) {
+export let mock = <F extends Formula>(f: F) => {
 	function mocked(this: ThisParameterType<F>, ...i: Parameters<F>) {
 		try {
 			var o: any = f.apply(this, i)

@@ -34,7 +34,7 @@ export class ViterCache extends Model {
 	}
 
 	useKey(val: any) {
-		const key = valKey(val)
+		let key = valKey(val)
 		this.inputKeys([...this.inputKeys(), key])
 		return this
 	}
@@ -58,9 +58,9 @@ export class ViterCache extends Model {
 	}
 
 	@cell version() {
-		const files = this.inputFiles()
+		let files = this.inputFiles()
 
-		for (const file of files) {
+		for (let file of files) {
 			TygerFile.from(file).watch()
 		}
 
@@ -68,14 +68,14 @@ export class ViterCache extends Model {
 	}
 
 	async versionHash() {
-		const murmur = new Murmur()
+		let murmur = new Murmur()
 
-		for (const key of this.inputKeys()) {
+		for (let key of this.inputKeys()) {
 			murmur.add(Buffer.from(key))
 		}
 
-		for (const file of this.inputFiles()) {
-			for await (const chunk of fs.createReadStream(file)) {
+		for (let file of this.inputFiles()) {
+			for await (let chunk of fs.createReadStream(file)) {
 				murmur.add(chunk)
 			}
 		}

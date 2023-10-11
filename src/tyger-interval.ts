@@ -1,7 +1,7 @@
 import {dict} from './dict'
 
-export const tygerInterval = dict('tygerInterval', (ms: number, _hit?: true) => {
-	const handle = setTimeout(() => tygerInterval(ms, true), ms)
+export let tygerInterval = dict('tygerInterval', (ms: number, _hit?: true) => {
+	let handle = setTimeout(() => tygerInterval(ms, true), ms)
 
 	return {
 		now: Date.now(),

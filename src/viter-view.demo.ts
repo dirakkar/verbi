@@ -7,7 +7,7 @@ import {ViterViewRenderer} from './viter-view-renderer'
 class App {
 	@cell count(): number {
 		tygerInterval(1000)
-		const prev = Atom.peek(() => this.count()) ?? 0
+		let prev = Atom.peek(() => this.count()) ?? 0
 		return prev + 1
 	}
 

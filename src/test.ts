@@ -13,11 +13,10 @@ export interface TestFailure {
 }
 
 export let testHandler = (report: TestReport): void => {
-	throw new Error('Test report handler not connected')
+	console.warn('Test report handler not connected')
+	console.dir(report, {depth: Infinity})
 }
 
-export function testConnect(next: typeof testHandler) {
+export let testConnect = (next: typeof testHandler) => {
 	testHandler = next
 }
-
-testConnect(report => console.dir(report, {depth: Infinity}))

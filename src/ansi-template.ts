@@ -5,7 +5,7 @@ export interface AnsiTemplateChunk {
 	text: string
 }
 
-export function ansiTemplate(template: string) {
+export let ansiTemplate = (template: string) => {
 	return ansiTemplateParse(template).map(chunk => {
 		return chunk.formats
 			? ansi(chunk.text, ...chunk.formats)
@@ -13,25 +13,25 @@ export function ansiTemplate(template: string) {
 	}).join('')
 }
 
-export function ansiTemplateParse(template: string) {
-	const chunks: AnsiTemplateChunk[] = []
+export let ansiTemplateParse = (template: string) => {
+	let chunks: AnsiTemplateChunk[] = []
 
-	const formatRgx = /(\[([^\]]+)\]\([^)]+\))|([^[]+)/g
+	let formatRgx = /(\[([^\]]+)\]\([^)]+\))|([^[]+)/g
 	let execArr: RegExpExecArray | null
 	while ((execArr = formatRgx.exec(template)) !== null) {
 		if (execArr[2] !== undefined) {
-			const formattedChunk = execArr[0]
-			const matchArr = formattedChunk.match(/\[(.+)\]\((.+)\)/)
-			const text = matchArr![1]
-			const formats = matchArr![2].split(',')
+			let formattedChunk = execArr[0]
+			let matchArr = formattedChunk.match(/\[(.+)\]\((.+)\)/)
+			let text = matchArr![1]
+			let formats = matchArr![2].split(',')
 
-			for (const format of formats) {
+			for (let format of formats) {
 				if (!ansiFormatIs(format)) throw new Error(`Unknown format "${format}"`)
 			}
 
 			chunks.push({text, formats: formats as AnsiFormat[]})
 		} else if (execArr[3] !== undefined) {
-			const rawChunk = execArr[3]
+			let rawChunk = execArr[3]
 			chunks.push({text: rawChunk})
 		}
 	}

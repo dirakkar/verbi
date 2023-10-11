@@ -1,7 +1,7 @@
 /**
  * Creates a promise with attached `resolve` and `reject` methods identical to arguments passed to a native Promise's `executor`.
  */
-export function promiseMake<T = void>(dispose?: () => void) {
+export let promiseMake = <T = void>(dispose?: () => void) => {
 	let resolve!: (value: T | PromiseLike<T>) => void
 	let reject!: (reason?: any) => void
 

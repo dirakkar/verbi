@@ -4,6 +4,23 @@ import {noop} from './noop'
 import {promiseLike} from './promise'
 import {rethrow} from './rethrow'
 
+let to = (name: string, wrap: (formula: Formula) => Formula) => formulaName((val: object, name?: string) => {
+	if (formulaIs(val)) {
+		return name
+			? formulaName(wrap(val), name)
+			: wrap(val)
+	}
+
+	return new Proxy(val, {
+		get(_, key) {
+			let method = val[key as never]
+			// TODO make it more performant?
+			if (formulaIs(method)) return wrap(method).bind(val)
+			return method
+		}
+	})
+}, name)
+
 export type ToSync<T> = T extends Formula ? ToSyncMethod<T> : {
 	[K in keyof T]: T[K] extends Formula ? ToSyncMethod<T[K]> : T[K]
 }
@@ -12,7 +29,7 @@ export type ToSyncMethod<T extends Formula> = T extends Formula<any, infer Args,
 	? (...args: Args) => Result
 	: T
 
-export const toSync = to('toSync', formula => function (...args) {
+export let toSync = to('toSync', formula => function (...args) {
 	return Atom.pull(Atom.task(this, formula, args))
 }) as <T extends object>(val: T, name?: string) => ToSync<T>
 
@@ -24,7 +41,7 @@ export type ToAsyncMethod<T extends Formula> = T extends Formula<any, infer Args
 	? (...args: Args) => Promise<Result>
 	: T
 
-export const toAsync = to('toAsync', formula => {
+export let toAsync = to('toAsync', formula => {
 	let task: Atom | undefined
 
 	return async function (...args) {
@@ -43,23 +60,4 @@ export const toAsync = to('toAsync', formula => {
 		}
 	}
 }) as <T extends object>(val: T, name?: string) => ToAsync<T>
-
-function to(name: string, wrap: (formula: Formula) => Formula) {
-	return formulaName((val: object, name?: string) => {
-		if (formulaIs(val)) {
-			return name
-				? formulaName(wrap(val), name)
-				: wrap(val)
-		}
-
-		return new Proxy(val, {
-			get(_, key) {
-				const method = val[key as never]
-				// TODO make it more performant?
-				if (formulaIs(method)) return wrap(method).bind(val)
-				return method
-			}
-		})
-	}, name)
-}
 

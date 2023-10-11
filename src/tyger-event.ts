@@ -9,10 +9,10 @@ export interface TygerEventReturn<T> {
 	payload: T
 }
 
-export function tygerEvent<
+export let tygerEvent = <
 	Target extends ListenerTarget,
 	Event extends string,
->(target: Target, event: Event) {
+>(target: Target, event: Event) => {
 	return eventStore({target, event}) as TygerEventReturn<ListenerPayload<Target, Event>> | undefined
 }
 
@@ -21,12 +21,12 @@ interface EventConfig {
 	event: string
 }
 
-const eventStore = dict('eventStore', (config: EventConfig, next?: TygerEventReturn<any>) => {
+let eventStore = dict('eventStore', (config: EventConfig, next?: TygerEventReturn<any>) => {
 	eventListen(config)
 	return next
 })
 
-const eventListen = dict('eventListen', (config: EventConfig) => new Listener(
+let eventListen = dict('eventListen', (config: EventConfig) => new Listener(
 	config.target,
 	config.event,
 	(...payload) => eventStore(config, {
@@ -35,9 +35,9 @@ const eventListen = dict('eventListen', (config: EventConfig) => new Listener(
 	}),
 ))
 
-export const tygerEventNext = toSync((target: ListenerTarget, event: string) => {
-	const promise = promiseMake<any>(() => listener.dispose())
-	const listener = new Listener(target, event, (...payload) => {
+export let tygerEventNext = toSync((target: ListenerTarget, event: string) => {
+	let promise = promiseMake<any>(() => listener.dispose())
+	let listener = new Listener(target, event, (...payload) => {
 		promise.resolve(payload)
 		listener.dispose()
 	})

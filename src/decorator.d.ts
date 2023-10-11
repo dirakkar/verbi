@@ -5,7 +5,7 @@ export interface Decorator<Store> {
 	(host: object, key: string, descr?: TypedPropertyDescriptor<Formula>): TypedPropertyDescriptor<Formula>
 }
 
-export function decorator<Store>(
+export let decorator = <Store>(
 	name: string,
-	wrap: (formula: Formula, store: WeakMap<any, Store>) => Formula
-): Decorator<Store>
+	wrap: (formula: Formula, store: WeakMap<any, Store>) => Formula,
+) => Decorator<Store>

@@ -1,6 +1,6 @@
 import {tygerEvent} from './tyger-event'
 
-export function tygerDocumentVisible() {
+export let tygerDocumentVisible = () => {
 	tygerEvent(document, 'visibilitychange')
 	return !document.hidden
 }

@@ -10,13 +10,11 @@ export interface Typeofs {
 	function: Function
 }
 
-export function typeof_(x: unknown): keyof Typeofs {
-	return x === null ? 'null' : typeof x
-}
+export let typeof_ = (x: unknown): keyof Typeofs =>
+	x === null ? 'null' : typeof x
 
-export function typeofIs<T extends keyof Typeofs>(
+export let typeofIs = <T extends keyof Typeofs>(
 	type: T,
 	x: unknown
-): x is Typeofs[T] {
-	return typeof_(x) === type
-}
+): x is Typeofs[T] =>
+	typeof_(x) === type

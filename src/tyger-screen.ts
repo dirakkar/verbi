@@ -1,11 +1,11 @@
 import {tygerEvent} from './tyger-event'
 
-export function tygerScreenOrientation() {
+export let tygerScreenOrientation = () => {
 	tygerEvent(screen.orientation, 'change')
 	return screen.orientation.type
 }
 
-export function tygerScreenAngle() {
+export let tygerScreenAngle = () => {
 	tygerEvent(screen.orientation, 'change')
 	return screen.orientation.angle
 }

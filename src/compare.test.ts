@@ -17,7 +17,7 @@ suite('compare', {
 		assert.like({x: {y: {z: true}}}, {x: {y: {z: true}}})
 		assert.notLike({x: {y: {z: true}}}, {x: {y: {z: false}}})
 
-		const key = Symbol()
+		let key = Symbol()
 		assert.like({[key]: true}, {[key]: true})
 		assert.notLike({[Symbol()]: true}, {[Symbol()]: true})
 	},
@@ -47,10 +47,10 @@ suite('compare', {
 	},
 
 	recursive_structures() {
-		const a = {x: {y: null as any}}
+		let a = {x: {y: null as any}}
 		a.x.y = a
 
-		const b = {x: {y: null as any}}
+		let b = {x: {y: null as any}}
 		b.x.y = b
 
 		assert.like(a, b)

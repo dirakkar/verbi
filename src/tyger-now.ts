@@ -1,3 +1,3 @@
 import {toSync} from './to'
 
-export const tygerNow = toSync(() => performance.timeOrigin + performance.now())
+export let tygerNow = toSync(() => performance.timeOrigin + performance.now())

@@ -12,21 +12,21 @@ export class ViterCacheLocal extends Model implements ViterCacheStore {
 	}
 
 	upload(task: string, version: string, dir: string) {
-		const existent = this.entryFind(task)
-		const name = `${task}@${version}`
+		let existent = this.entryFind(task)
+		let name = `${task}@${version}`
 
 		if (existent?.name() === name) {
 			return
 		}
 
 		existent?.exists(false)
-		const next = this.root().join(name)
+		let next = this.root().join(name)
 		next.exists(true)
 		TygerFile.absolute(dir).copy(next)
 	}
 
 	download(task: string, version: string, dir: string) {
-		const existent = this.entryFind(task)
+		let existent = this.entryFind(task)
 
 		if (existent?.name() !== `${task}@${version}`) {
 			existent?.exists(false)
@@ -38,7 +38,7 @@ export class ViterCacheLocal extends Model implements ViterCacheStore {
 	}
 
 	drop(task: string) {
-		const prev = this.entryFind(task)?.exists() ?? false
+		let prev = this.entryFind(task)?.exists() ?? false
 		this.entryFind(task)?.exists(false)
 		return prev
 	}

@@ -1,1 +1,2 @@
-export function compare<T>(a: T, b: T): boolean
+export let compare = <T>(a: T, b: T) => boolean
+

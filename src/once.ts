@@ -3,7 +3,7 @@ import {decorator} from './decorator'
 /**
  * Wraps a function or a method so that it executes only once and then returns the result from the cache.
  */
-export const once = decorator<any>('once', (formula, store) => function (this: any) {
+export let once = decorator<any>('once', (formula, store) => function (this: any) {
 	if (store.has(this)) {
 		var result = store.get(this)
 	} else {

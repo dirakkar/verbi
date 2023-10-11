@@ -8,29 +8,29 @@ import {ViterCommand} from './viter-command'
 import {ViterViewNode, viterView} from './viter-view'
 import {ViterViewRenderer} from './viter-view-renderer'
 
-const viewNode = cell('viewNode', (next?: () => ViterViewNode) => {
+let viewNode = cell('viewNode', (next?: () => ViterViewNode) => {
 	return next ?? (() => null)
 })
 
-const renderer = ViterViewRenderer.make({
+let renderer = ViterViewRenderer.make({
 	node: () => viewNode()(),
 })
 
-const rendererLoop = renderer.writeLoop()
+let rendererLoop = renderer.writeLoop()
 
-const commands: Rec<() => ViterCommand> = {
+let commands: Rec<() => ViterCommand> = {
 	// TODO
 }
 
-const commandName = process.argv[2] || 'help'
-const command = commands[commandName]?.()
+let commandName = process.argv[2] || 'help'
+let command = commands[commandName]?.()
 
 if (!command) {
 	viewNode(() => errorNode(`Unknown command "${commandName}"`))
 } else {
 	viewNode(() => {
 		try {
-			return command.view()
+			return command!.view()
 		} catch (error) {
 			if (promiseLike(error)) return null
 			return errorNode(error)
@@ -47,7 +47,7 @@ if (!command) {
 		})
 }
 
-function errorNode(error: any) {
+let errorNode = (error: any) => {
 	if (error instanceof Error) {
 		error = String(error) + '\n' + ansi.dim(errorStack(error, '  ')!)
 	}

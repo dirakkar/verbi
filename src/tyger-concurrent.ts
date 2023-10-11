@@ -12,8 +12,8 @@ export type TygerConcurrent<T extends Tasks> = {
 /**
  * Execute multiple suspending tasks concurrently.
  */
-export function tygerConcurrent<T extends Tasks>(tasks: T, max = Infinity) {
-	const results = tasks.map(task => {
+export let tygerConcurrent = <T extends Tasks>(tasks: T, max = Infinity) => {
+	let results = tasks.map(task => {
 		if (!max) return
 
 		try {
@@ -24,10 +24,10 @@ export function tygerConcurrent<T extends Tasks>(tasks: T, max = Infinity) {
 		}
 	})
 
-	const promises = results.filter(promiseLike)
+	let promises = results.filter(promiseLike)
 	if (promises.length) rethrow(Promise.race(promises))
 
-	const error = results.find(r => r instanceof Error)
+	let error = results.find(r => r instanceof Error)
 	if (error) rethrow(error)
 
 	return results as TygerConcurrent<T>

@@ -1,9 +1,9 @@
 import tty from 'node:tty'
 import {Rec} from './rec'
 
-export const AnsiEsc = '\u001B['
+export let AnsiEsc = '\u001B['
 
-export const ansiFormats = {
+export let ansiFormats = {
 	reset: [0, 0],
 	bold: [1, 22],
 	dim: [2, 22],
@@ -37,9 +37,7 @@ export const ansiFormats = {
 
 export type AnsiFormat = keyof typeof ansiFormats
 
-export function ansiFormatIs(val: string): val is AnsiFormat {
-	return val in ansiFormats
-}
+export let ansiFormatIs = (v: string): v is AnsiFormat => v in ansiFormats
 
 export interface Ansi {
 	(string: string, ...formats: (AnsiFormat | null | undefined | false)[]): string
@@ -74,17 +72,15 @@ export interface Ansi {
 }
 
 // TODO https://github.com/nodejs/node/pull/40240
-const hasColors = tty.WriteStream.prototype.hasColors()
+let hasColors = tty.WriteStream.prototype.hasColors()
 
-export const ansi = createAnsi([])
-
-function createAnsi(formatsBase: AnsiFormat[]): Ansi {
-	const apply = (string: string, ...formats: (AnsiFormat | null | undefined | false)[]) => {
+let createAnsi = (formatsBase: AnsiFormat[]): Ansi => {
+	let apply = (string: string, ...formats: (AnsiFormat | null | undefined | false)[]) => {
 		if (!hasColors) return string
 
-		for (const format of (formatsBase as typeof formats).concat(formats)) {
+		for (let format of (formatsBase as typeof formats).concat(formats)) {
 			if (!format) continue
-			const [open, close] = ansiFormats[format]
+			let [open, close] = ansiFormats[format]
 			string = AnsiEsc + open + 'm' + string + AnsiEsc + close + 'm'
 		}
 		return string
@@ -93,5 +89,7 @@ function createAnsi(formatsBase: AnsiFormat[]): Ansi {
 	return new Proxy(apply, { get: (_, key) => {
 		if (key in ansiFormats) return createAnsi(formatsBase.concat(key as AnsiFormat))
 		return apply[key as never]
-	} }) as Ansi
+} }) as Ansi
 }
+
+export let ansi = createAnsi([])

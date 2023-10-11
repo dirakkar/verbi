@@ -24,7 +24,7 @@ export function formulaIs(val: unknown): val is Formula {
 /**
  * Change a function's name.
  */
-export function formulaName<F extends Function>(f: F, next: string) {
-	Reflect.defineProperty(f, 'name', {value: next})
-	return f
-}
+export let formulaName = <F extends Function>(f: F, next: string) => (
+	Reflect.defineProperty(f, 'name', {value: next}),
+	f
+)
