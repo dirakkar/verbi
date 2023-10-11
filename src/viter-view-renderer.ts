@@ -3,7 +3,7 @@ import {ansiTemplate} from './ansi-template'
 import {ansiWrap} from './ansi-wrap'
 import {ansiStrip} from './ansi-strip'
 import {arrayMake} from './array'
-import {Base} from './base'
+import {Model} from './model'
 import {cell} from './cell'
 import {RecEntries} from './rec'
 import {Timer} from './timer'
@@ -20,7 +20,7 @@ const stdoutWrite = toSync((text: string) => {
 	})
 }, 'stdoutWrite')
 
-export class ViterViewRenderer extends Base {
+export class ViterViewRenderer extends Model {
 	node() {
 		return null! as ViterViewNode
 	}

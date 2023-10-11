@@ -1,8 +1,8 @@
-import {Base} from './base'
+import {Model} from './model'
 import {TygerFile} from './tyger-file'
 import {ViterCacheStore} from './viter-cache'
 
-export class ViterCacheLocal extends Base implements ViterCacheStore {
+export class ViterCacheLocal extends Model implements ViterCacheStore {
 	root() {
 		return TygerFile.from('.viter/cache')
 	}

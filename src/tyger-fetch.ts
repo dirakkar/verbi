@@ -1,5 +1,5 @@
 import {action} from './action'
-import {Base} from './base'
+import {Model} from './model'
 import {toSync} from './to'
 
 export const tygerFetch = toSync(function tygerFetch(
@@ -40,7 +40,7 @@ export const TygerFetchResponseStatus = [
 	'ServerError',
 ] as const
 
-export class TygerFetchResponse extends Base {
+export class TygerFetchResponse extends Model {
 	constructor(public native: Response) {
 		super()
 	}

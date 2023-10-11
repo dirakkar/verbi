@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import {Murmur} from './murmur'
 import {ViterCacheLocal} from './viter-cache-local'
-import {Base} from './base'
+import {Model} from './model'
 import {cell} from './cell'
 import {toSync} from './to'
 import {TygerFile} from './tyger-file'
@@ -14,9 +14,9 @@ export interface ViterCacheStore {
 	purge(): void
 }
 
-export class ViterCache extends Base {
+export class ViterCache extends Model {
 	@cell store(): ViterCacheStore {
-		return ViterCacheLocal.make()
+		return ViterCacheLocal.make({})
 	}
 
 	@cell inputFiles(next?: string[]) {
@@ -39,7 +39,7 @@ export class ViterCache extends Base {
 		return this
 	}
 
-	task() {
+	@cell task() {
 		return 'unknown'
 	}
 
@@ -68,7 +68,7 @@ export class ViterCache extends Base {
 	}
 
 	async versionHash() {
-		const murmur = new Murmur
+		const murmur = new Murmur()
 
 		for (const key of this.inputKeys()) {
 			murmur.add(Buffer.from(key))

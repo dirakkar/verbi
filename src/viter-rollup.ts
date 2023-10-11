@@ -1,7 +1,7 @@
 import * as rollup from 'rollup'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import typescript from 'rollup-plugin-typescript2'
-import {Base} from './base'
+import {Model} from './model'
 import {cell} from './cell'
 import {toSync} from './to'
 import {TygerFile} from './tyger-file'
@@ -12,7 +12,7 @@ import {Timer} from './timer'
 type RollupLog = rollup.RollupLog
 type RollupLogLevel = rollup.LogLevel
 
-export class ViterRollup extends Base {
+export class ViterRollup extends Model {
 	plugins(): rollup.Plugin[] {
 		return []
 	}

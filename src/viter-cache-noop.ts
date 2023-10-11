@@ -1,7 +1,7 @@
-import {Base} from './base'
+import {Model} from './model'
 import {ViterCacheStore} from './viter-cache'
 
-export class ViterCacheNoop extends Base implements ViterCacheStore {
+export class ViterCacheNoop extends Model implements ViterCacheStore {
 	download() {
 		return false
 	}

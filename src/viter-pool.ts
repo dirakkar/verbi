@@ -1,6 +1,6 @@
 import worker_threads, {Worker} from 'node:worker_threads'
 import os from 'node:os'
-import {Base} from './base'
+import {Model} from './model'
 import {cell} from './cell'
 import {dict} from './dict'
 import {formulaIs} from './formula'
@@ -13,7 +13,7 @@ import {action} from './action'
 
 type ViterPoolInput<T> = T extends ViterPool<infer Id> ? Id : never
 
-export abstract class ViterPool<Input = void> extends Base {
+export abstract class ViterPool<Input = void> extends Model {
 	@dict static create<T extends ViterPool<any>>(
 		this: new (input: ViterPoolInput<T>) => T,
 		id: ViterPoolInput<T>

@@ -1,7 +1,7 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import chokidar from 'chokidar'
-import {Base} from './base'
+import {Model} from './model'
 import {dict} from './dict'
 import {cell} from './cell'
 import {decorator} from './decorator'
@@ -49,7 +49,7 @@ function statFrom(path: string, native: fs.Stats | fs.BigIntStats): TygerFileSta
 	}
 }
 
-export class TygerFile extends Base {
+export class TygerFile extends Model {
 	static from(filepath: string) {
 		return TygerFile.absolute(path.resolve(filepath))
 	}

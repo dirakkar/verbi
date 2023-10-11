@@ -5,7 +5,6 @@ import {promiseLike} from './promise'
 import {Rec} from './rec'
 import {toAsync} from './to'
 import {ViterCommand} from './viter-command'
-import {ViterPack} from './viter-pack'
 import {ViterViewNode, viterView} from './viter-view'
 import {ViterViewRenderer} from './viter-view-renderer'
 
@@ -20,14 +19,7 @@ const renderer = ViterViewRenderer.make({
 const rendererLoop = renderer.writeLoop()
 
 const commands: Rec<() => ViterCommand> = {
-	help: () => {
-		throw 'та пішов ти нахуй'
-	},
-
-	pack: () => ViterPack.create({
-		project: process.cwd(),
-		publish: false,
-	}),
+	// TODO
 }
 
 const commandName = process.argv[2] || 'help'
@@ -45,7 +37,8 @@ if (!command) {
 		}
 	})
 
-	toAsync(command).run()
+	toAsync(command)
+		.run()
 		.catch(error => {
 			viewNode(() => errorNode(error))
 		})
@@ -56,10 +49,7 @@ if (!command) {
 
 function errorNode(error: any) {
 	if (error instanceof Error) {
-		error =
-			String(error) +
-			'\n' +
-			ansi.dim(errorStack(error, '  ')!)
+		error = String(error) + '\n' + ansi.dim(errorStack(error, '  ')!)
 	}
 	error = String(error)
 
