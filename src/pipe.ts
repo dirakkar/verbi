@@ -1,4 +1,4 @@
-import {formulaIs} from './formula'
+import {fnIs} from './fn'
 
 /** Either an unary function or an unary constructor */
 export type PipeFn<I, O> =
@@ -32,7 +32,7 @@ export function pipe<I1, I2, I3, I4, I5, I6, I7, I8, I9, I10, I11, I12, O>(input
 /** Passes `input` through all provided functions or constructors (see `PipeFn`) */
 export function pipe(input: any, ...fns: any[]): any {
 	return fns.reduce((val, fn) => {
-		if (formulaIs(fn)) return fn(val)
+		if (fnIs(fn)) return fn(val)
 		else return new fn(val)
 	}, input)
 }

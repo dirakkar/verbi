@@ -3,7 +3,7 @@ import os from 'node:os'
 import {Model} from './model'
 import {cell} from './cell'
 import {dict} from './dict'
-import {formulaIs} from './formula'
+import {fnIs} from './fn'
 import {rethrow} from './rethrow'
 import {toSync} from './to'
 import {tygerEventWait} from './tyger-event'
@@ -27,7 +27,7 @@ export abstract class ViterPool<Input = void> extends Model {
 		? new Proxy(this, {
 				get: (_, key: string) => {
 					let val = (this as any)[key]
-					if (!formulaIs(val)) return val
+					if (!fnIs(val)) return val
 					return (...args: any) => this.call(key, args)
 				},
 		  })

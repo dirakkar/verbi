@@ -1,6 +1,6 @@
-import {Formula, formulaName} from './formula'
+import {Fn, fnName} from './fn'
 
-export type MockCall<F extends Formula> = {
+export type MockCall<F extends Fn> = {
 	i: Parameters<F>
 	o: ReturnType<F>
 }
@@ -8,7 +8,7 @@ export type MockCall<F extends Formula> = {
 /**
  * Wrap a function to intercept and store each calls inputs and outputs in the `calls` property
  */
-export let mock = <F extends Formula>(f: F) => {
+export let mock = <F extends Fn>(f: F) => {
 	function mocked(this: ThisParameterType<F>, ...i: Parameters<F>) {
 		try {
 			var o: any = f.apply(this, i)
@@ -21,7 +21,7 @@ export let mock = <F extends Formula>(f: F) => {
 		}
 	}
 
-	formulaName(mocked, f.name + '_mock')
+	fnName(mocked, f.name + '_mock')
 
 	mocked.calls = [] as MockCall<F>[]
 

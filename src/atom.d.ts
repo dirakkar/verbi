@@ -1,13 +1,13 @@
-import {Formula} from './formula'
+import {Fn} from './fn'
 
 export type AtomStatus = -1 | -2 | -3 | -4
 
-export type AtomCache<F extends Formula> =
+export type AtomCache<F extends Fn> =
 	| ReturnType<F>
 	| Error
 	| Promise<ReturnType<F> | Error>
 
-export declare class Atom<F extends Formula = Formula> {
+export declare class Atom<F extends Fn = Fn> {
 	static linking?: Atom
 	static owning: WeakMap<Atom, Disposable>
 
@@ -16,17 +16,17 @@ export declare class Atom<F extends Formula = Formula> {
 	static peek<T>(formula: () => T): T | undefined
 
 	static reap(): void
-	static task<F extends Formula>(
+	static task<F extends Fn>(
 		host: ThisParameterType<F>,
 		formula: F,
 		args: Parameters<F>
 	): AtomTask<F>
-	static id(host: object, formula: Formula, key?: string): string
+	static id(host: object, formula: Fn, key?: string): string
 
-	static pull<F extends Formula>(atom: Atom<F>): ReturnType<F>
-	static snapshot<F extends Formula>(atom: Atom<F>): ReturnType<F>
-	static push<F extends Formula>(atom: Atom<F>, args: Parameters<F>): ReturnType<F>
-	static set<F extends Formula>(atom: Atom<F>, next: AtomCache<F>): void
+	static pull<F extends Fn>(atom: Atom<F>): ReturnType<F>
+	static snapshot<F extends Fn>(atom: Atom<F>): ReturnType<F>
+	static push<F extends Fn>(atom: Atom<F>, args: Parameters<F>): ReturnType<F>
+	static set<F extends Fn>(atom: Atom<F>, next: AtomCache<F>): void
 	static refresh(atom: Atom): void
 	static cut(atom: Atom): void
 	static mark(atom: Atom): void
@@ -53,5 +53,5 @@ export declare class Atom<F extends Formula = Formula> {
 	dispose(): void
 }
 
-export declare class AtomTask<F extends Formula = Formula> extends Atom<F> {
+export declare class AtomTask<F extends Fn = Fn> extends Atom<F> {
 }
