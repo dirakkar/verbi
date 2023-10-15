@@ -6,7 +6,7 @@ import {Atom} from './atom'
 import {mock} from './mock'
 import {toSync, toAsync} from './to'
 
-suite('graph', {
+suite('atom', {
 	dependency_tracking() {
 		let a = new Atom('a', () => 0)
 		let b = new Atom('b', mock(() => Atom.pull(a)))

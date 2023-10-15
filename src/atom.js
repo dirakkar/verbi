@@ -1,11 +1,11 @@
 import {compare} from './compare'
 import {disposableIs} from './disposable'
-import {formulaIs} from './formula'
+import {fnIs} from './fn'
 import {noop} from './noop'
 import {promiseLike} from './promise'
 import {rethrow} from './rethrow'
 
-const handled = new WeakSet
+let handled = new WeakSet
 let reaping = new Set
 let unstable = false
 let peek = false
@@ -22,11 +22,11 @@ export class Atom {
 		if (Atom.linking) Atom.linking.reap = noop
 	}
 
-	static peek(formula) {
-		const prev = peek
+	static peek(fn) {
+		let prev = peek
 		peek = true
 		try {
-			return formula()
+			return fn()
 		} finally {
 			peek = prev
 		}
@@ -34,20 +34,20 @@ export class Atom {
 
 	static reap() {
 		while (reaping.size) {
-			const prev = reaping
+			let prev = reaping
 			reaping = new Set
-			for (const atom of prev) atom.dispose()
+			for (let atom of prev) atom.dispose()
 		}
 	}
 
-	static task(host, formula, args) {
-		const sub = Atom.linking
-		const pub = sub && sub.t < sub.s && sub.d[sub.t]
+	static task(host, fn, args) {
+		let sub = Atom.linking
+		let pub = sub && sub.t < sub.s && sub.d[sub.t]
 
 		if (pub) {
 			if (
 				pub.h === host &&
-				pub.f === formula &&
+				pub.f === fn &&
 				compare(pub.d.slice(0, pub.p), args)
 			) return pub
 
@@ -58,19 +58,19 @@ export class Atom {
 		}
 
 		return new AtomTask(
-			Atom.id(host, formula, '...'),
-			formula,
+			Atom.id(host, fn, '...'),
+			fn,
 			host,
 			args
 		)
 	}
 
-	static id(host, formula, key = '') {
-		return ((host && !formulaIs(host) ? (host[Symbol.toStringTag] ?? (host.constructor.name + '()') + '.') : '') + formula.name + '(' + key + ')')
+	static id(host, fn, key = '') {
+		return ((host && !fnIs(host) ? (host[Symbol.toStringTag] ?? (host.letructor.name + '()') + '.') : '') + fn.name + '(' + key + ')')
 	}
 
 	static pull(x) {
-		const sub = Atom.linking
+		let sub = Atom.linking
 
 		if (peek) return (promiseLike(x.c) || x.c instanceof Error)
 			? undefined
@@ -80,7 +80,7 @@ export class Atom {
 
 		link: if (sub) {
 			if (sub.t < sub.s) {
-				const last = sub.d[sub.t]
+				let last = sub.d[sub.t]
 
 				if (last === x) {
 					sub.t += 2
@@ -117,7 +117,7 @@ export class Atom {
 	static snapshot = Atom.pull
 
 	static push(x, args) {
-		const result = x.f.apply(x.h, args)
+		let result = x.f.apply(x.h, args)
 		Atom.set(x, result)
 		return result
 	}
@@ -125,7 +125,7 @@ export class Atom {
 	static refresh(x) {
 		clarify: if (x.t === -2) {
 			for (let i = x.p; i < x.s; i += 2) {
-				const pub = (x.d[i])
+				let pub = (x.d[i])
 				if (pub) Atom.refresh(pub)
 
 				if (x.t !== -2) break clarify
@@ -137,8 +137,8 @@ export class Atom {
 		if (x.t <= -3) return
 
 		x.t = x.p
-		const unstablePrev = unstable
-		const linkingPrev = Atom.linking
+		let unstablePrev = unstable
+		let linkingPrev = Atom.linking
 		Atom.linking = x
 
 		let result
@@ -149,7 +149,7 @@ export class Atom {
 			if (x.p > 1) result = x.f.apply(x.h, x.d.slice(0, x.p))
 
 			if (promiseLike(result)) {
-				const set = res => {
+				let set = res => {
 					if (x.c === result) Atom.set(x, res)
 					return res
 				}
@@ -189,7 +189,7 @@ export class Atom {
 	}
 
 	static set(x, next) {
-		const prev = x.c
+		let prev = x.c
 
 		if (x instanceof AtomTask) {
 			x.c = next
@@ -222,7 +222,7 @@ export class Atom {
 			x.t = -3
 
 			if (!promiseLike(next)) {
-				const to = x.t < 0 ? x.s : x.t
+				let to = x.t < 0 ? x.s : x.t
 
 				for (let i = x.p; i < to; i += 2) {
 					if (promiseLike(x.d[i]?.c)) return
@@ -239,11 +239,11 @@ export class Atom {
 		let tail = 0
 
 		for (let i = x.t; i < x.s; i += 2) {
-			const pub = x.d[i]
+			let pub = x.d[i]
 
 			if (pub) {
-				const pos = x.d[i + 1]
-				const end = pub.d.length - 2
+				let pos = x.d[i + 1]
+				let end = pub.d.length - 2
 
 				if (pos !== end) Atom.cp(pub, end, pos)
 				pub.d.pop()
@@ -284,8 +284,8 @@ export class Atom {
 	}
 
 	static cp(x, from, to) {
-		const peer = x.d[from]
-		const self = x.d[from + 1]
+		let peer = x.d[from]
+		let self = x.d[from + 1]
 
 		x.d[to] = peer
 		x.d[to + 1] = self
@@ -310,8 +310,8 @@ export class Atom {
 
 	dispose() {
 		for (let i = this.d.length - 2; i >= this.s; i -= 2) {
-			const sub = this.d[i]
-			const self = this.d[i + 1]
+			let sub = this.d[i]
+			let self = this.d[i + 1]
 
 			sub.d[self] = sub.d[self + 1] = undefined
 
