@@ -2,23 +2,22 @@ let cache = new WeakMap
 
 let keyFns = [Object.getOwnPropertyNames, Object.getOwnPropertySymbols]
 
-export let compare = (a, b) => {
+export function compare(a, b) {
 	if (Object.is(a, b)) return true
 
-	if (
-		a === null ||
+	if (a === null ||
 		b === null ||
 		typeof a !== 'object' ||
-		typeof b !== 'object'
-	) return false
+		typeof b !== 'object') return false
 
+	/**
+	 * Type of the first value.
+	 */
 	let ap = Reflect.getPrototypeOf(a)
 	if (ap !== Reflect.getPrototypeOf(b)) return false
 
-	if (
-		a instanceof Error ||
-		a instanceof Date
-	) return a.valueOf() === b.valueOf()
+	if (a instanceof Error ||
+		a instanceof Date) return a.valueOf() === b.valueOf()
 	if (a instanceof RegExp) return a.source === b.source && a.flags === b.flags
 
 	let ac = cache.get(a)
@@ -48,7 +47,7 @@ export let compare = (a, b) => {
 			res = cmpArr(a, b)
 		}
 
-		// reuse 'res' to store collection kind (true for Map, false for Set) until relevant result is evaluated
+		// on the next line, res is used to determine collection kind (true for Map, false for Set) until relevant comparison result is evaluated
 		else if (a instanceof Set || (res = a instanceof Map)) {
 			res = (
 				a.size === b.size &&
@@ -75,7 +74,7 @@ export let compare = (a, b) => {
 	return res
 }
 
-let cmpArr = (a, b) => {
+function cmpArr(a, b) {
 	let i = a.length
 	if (i !== b.length) return false
 
@@ -86,8 +85,8 @@ let cmpArr = (a, b) => {
 	return true
 }
 
-let cmpItr = (a, b) => {
-	for (;;) {
+function cmpItr(a, b) {
+	for (; ;) {
 		let an = a.next()
 		let bn = b.next()
 

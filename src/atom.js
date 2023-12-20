@@ -5,8 +5,8 @@ import {noop} from './noop'
 import {promiseLike} from './promise'
 import {rethrow} from './rethrow'
 
-let handled = new WeakSet
-let reaping = new Set
+const handled = new WeakSet
+const reaping = new Set
 let unstable = false
 let peek = false
 
@@ -23,7 +23,7 @@ export class Atom {
 	}
 
 	static peek(fn) {
-		let prev = peek
+		const prev = peek
 		peek = true
 		try {
 			return fn()
@@ -34,15 +34,15 @@ export class Atom {
 
 	static reap() {
 		while (reaping.size) {
-			let prev = reaping
+			const prev = reaping
 			reaping = new Set
-			for (let atom of prev) atom.dispose()
+			for (const atom of prev) atom.dispose()
 		}
 	}
 
 	static task(host, fn, args) {
-		let sub = Atom.linking
-		let pub = sub && sub.t < sub.s && sub.d[sub.t]
+		const sub = Atom.linking
+		const pub = sub && sub.t < sub.s && sub.d[sub.t]
 
 		if (pub) {
 			if (
@@ -65,19 +65,18 @@ export class Atom {
 		)
 	}
 
-	static id(host, fn, key = '') {
-		return ((host && !fnIs(host) ? (host[Symbol.toStringTag] ?? (host.letructor.name + '()') + '.') : '') + fn.name + '(' + key + ')')
+	static id(host, fn, key) {
+		return ((host && !fnIs(host) ? (host[Symbol.toStringTag] ?? (host.constructor.name + '()') + '.') : '') + fn.name + '(' + key + ')')
 	}
 
 	static pull(x) {
-		let sub = Atom.linking
-
 		if (peek) return (promiseLike(x.c) || x.c instanceof Error)
 			? undefined
 			: x.c
 
 		if (x.t >= 0) throw new Error('Circular subscription detected')
 
+		const sub = Atom.linking
 		link: if (sub) {
 			if (sub.t < sub.s) {
 				let last = sub.d[sub.t]
@@ -92,8 +91,7 @@ export class Atom {
 						Atom.cp(sub, sub.s, sub.d.length)
 					}
 
-					Atom.cp(sub, sub.t, sub.s)
-					sub.s += 2
+					Atom.cp(sub, sub.t, (sub.s += 2) - 2)
 				}
 			} else {
 				if (sub.s < sub.d.length) {
@@ -114,18 +112,17 @@ export class Atom {
 		return x.c
 	}
 
+	// decorated in the "action" module
 	static snapshot = Atom.pull
 
 	static push(x, args) {
-		let result = x.f.apply(x.h, args)
-		Atom.set(x, result)
-		return result
+		return Atom.set(x, x.f.apply(x.h, args))
 	}
 
 	static refresh(x) {
 		clarify: if (x.t === -2) {
 			for (let i = x.p; i < x.s; i += 2) {
-				let pub = (x.d[i])
+				const pub = (x.d[i])
 				if (pub) Atom.refresh(pub)
 
 				if (x.t !== -2) break clarify
@@ -149,7 +146,7 @@ export class Atom {
 			if (x.p > 1) result = x.f.apply(x.h, x.d.slice(0, x.p))
 
 			if (promiseLike(result)) {
-				let set = res => {
+				const set = res => {
 					if (x.c === result) Atom.set(x, res)
 					return res
 				}
@@ -189,7 +186,7 @@ export class Atom {
 	}
 
 	static set(x, next) {
-		let prev = x.c
+		const prev = x.c
 
 		if (x instanceof AtomTask) {
 			x.c = next
@@ -211,7 +208,7 @@ export class Atom {
 					try {
 						next[Symbol.toStringTag] = x.i
 					} catch {
-						Object.defineProperty(next, Symbol.toStringTag, {value: x.i})
+						Reflect.defineProperty(next, Symbol.toStringTag, {value: x.i})
 					}
 				}
 
@@ -222,7 +219,7 @@ export class Atom {
 			x.t = -3
 
 			if (!promiseLike(next)) {
-				let to = x.t < 0 ? x.s : x.t
+				const to = x.t < 0 ? x.s : x.t
 
 				for (let i = x.p; i < to; i += 2) {
 					if (promiseLike(x.d[i]?.c)) return
@@ -233,6 +230,8 @@ export class Atom {
 				}
 			}
 		}
+
+		return next
 	}
 
 	static cut(x) {
@@ -284,8 +283,8 @@ export class Atom {
 	}
 
 	static cp(x, from, to) {
-		let peer = x.d[from]
-		let self = x.d[from + 1]
+		const peer = x.d[from]
+		const self = x.d[from + 1]
 
 		x.d[to] = peer
 		x.d[to + 1] = self
@@ -310,8 +309,8 @@ export class Atom {
 
 	dispose() {
 		for (let i = this.d.length - 2; i >= this.s; i -= 2) {
-			let sub = this.d[i]
-			let self = this.d[i + 1]
+			const sub = this.d[i]
+			const self = this.d[i + 1]
 
 			sub.d[self] = sub.d[self + 1] = undefined
 
@@ -327,7 +326,7 @@ export class Atom {
 		if (
 			!(this instanceof AtomTask) &&
 			Atom.owning.get(this.c) === this
-		) this.c.dispose()
+		) this.c[Symbol.dispose]()
 	}
 
 	toString() {

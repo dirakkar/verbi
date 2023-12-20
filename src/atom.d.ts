@@ -7,7 +7,7 @@ export type AtomCache<F extends Fn> =
 	| Error
 	| Promise<ReturnType<F> | Error>
 
-export declare class Atom<F extends Fn = Fn> {
+export class Atom<F extends Fn = Fn> {
 	static linking?: Atom
 	static owning: WeakMap<Atom, Disposable>
 
@@ -21,7 +21,7 @@ export declare class Atom<F extends Fn = Fn> {
 		formula: F,
 		args: Parameters<F>
 	): AtomTask<F>
-	static id(host: object, formula: Fn, key?: string): string
+	static id(host: object, formula: Fn, key: string): string
 
 	static pull<F extends Fn>(atom: Atom<F>): ReturnType<F>
 	static snapshot<F extends Fn>(atom: Atom<F>): ReturnType<F>
@@ -53,5 +53,5 @@ export declare class Atom<F extends Fn = Fn> {
 	dispose(): void
 }
 
-export declare class AtomTask<F extends Fn = Fn> extends Atom<F> {
+export class AtomTask<F extends Fn = Fn> extends Atom<F> {
 }

@@ -1,6 +1,6 @@
 import {Fn, fnName} from './fn'
 
-export type MockCall<F extends Fn> = {
+export interface MockCall<F extends Fn> {
 	i: Parameters<F>
 	o: ReturnType<F>
 }
@@ -8,7 +8,7 @@ export type MockCall<F extends Fn> = {
 /**
  * Wrap a function to intercept and store each calls inputs and outputs in the `calls` property
  */
-export let mock = <F extends Fn>(f: F) => {
+export function mock<F extends Fn>(f: F) {
 	function mocked(this: ThisParameterType<F>, ...i: Parameters<F>) {
 		try {
 			var o: any = f.apply(this, i)
@@ -26,7 +26,7 @@ export let mock = <F extends Fn>(f: F) => {
 	mocked.calls = [] as MockCall<F>[]
 
 	/**
-	 * Returns argument at specified index from the latest call's input list
+	 * Returns an argument at specified index from the latest call's input list
 	 */
 	mocked.arg =
 		<Index extends Extract<keyof Parameters<F>, number>>

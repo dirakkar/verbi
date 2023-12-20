@@ -1,6 +1,9 @@
 export type Disposable = {
-	dispose(): void
+	[Symbol.dispose](): void
 }
 
-export let disposableIs = (v: unknown): v is Disposable =>
-	!!v && typeof (v as any).dispose === 'function'
+(Symbol.dispose as any) ??= Symbol('Symbol.dispose')
+
+export function disposableIs(v: unknown): v is Disposable {
+	return !!v && typeof (v as any)[Symbol.dispose] === 'function'
+}

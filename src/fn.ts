@@ -10,17 +10,20 @@ export type Fn<
 /**
  * Checks if `val` is a `Formula`.
  */
-export let fnIs = (v: unknown): v is Fn => (
-	typeof v === 'function' &&
-	(
-		!('prototype' in v) ||
-		// https://stackoverflow.com/a/56035104
-		!Object.getOwnPropertyNames(v).includes('arguments')
-	)
-)
+export function fnIs(v: unknown): v is Fn {
+	// https://stackoverflow.com/a/56035104
+	return typeof v === 'function' && (!('prototype' in v) || !Object.getOwnPropertyNames(v).includes('arguments'))
+}
 
 /**
  * Change a function's name.
  */
-export let fnName = <F extends Function>(f: F, next: string) =>
-	(Reflect.defineProperty(f, 'name', {value: next}), f)
+export function fnName<F extends Function>(f: F, next: string) {
+	Reflect.defineProperty(f, 'name', {value: next})
+	return f
+}
+
+/**
+ * Does nothing.
+ */
+export function fnNop() {}

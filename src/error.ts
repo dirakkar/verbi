@@ -6,7 +6,7 @@ type ErrorHandleResult = [display: string | null, rethrow: Error]
  * Returns a tuple of type `[display, rethrow]` where `display` is serialized representation of an error and `rethrow` is what you should rethrow (identical to passed value unless it's not an Error object).
  * It uses a global WeakSet of handled errors, so `display` is set to null if passed error was already handled.
  */
-export let errorHandle = (error: unknown): ErrorHandleResult => {
+export function errorHandle(error: unknown): ErrorHandleResult {
 	if (caught.has(error)) {
 		return [null, error as Error]
 	}
@@ -23,7 +23,7 @@ export let errorHandle = (error: unknown): ErrorHandleResult => {
 	return [errorSerialize(error), error as Error]
 }
 
-export let errorSerialize = (error: unknown) => {
+export function errorSerialize(error: unknown) {
 	let result = String(error)
 
 	if (error instanceof Error) {
@@ -33,8 +33,12 @@ export let errorSerialize = (error: unknown) => {
 	return result
 }
 
-export let errorStack = (error: any, prefix = '') => {
-	if (error instanceof Error === false) {
+const ErrorStackLineIgnore = [
+	'node:internal',
+]
+
+export function errorStack(error: any, prefix = '') {
+	if (!(error instanceof Error)) {
 		return null
 	}
 
@@ -42,12 +46,10 @@ export let errorStack = (error: any, prefix = '') => {
 		.split('\n')
 		.slice(1)
 		.filter(line => {
-			let ignore = [
-				'node:internal',
-			]
-
-			return !ignore.some(substr => line.includes(substr))
+			return !ErrorStackLineIgnore.some(substr => line.includes(substr))
 		})
-		.map(line => prefix + line.trim())
+		.map(line => {
+			return prefix + line.trim()
+		})
 		.join('\n')
 }

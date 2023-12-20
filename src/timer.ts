@@ -10,7 +10,7 @@ export class Timer implements Disposable {
 		this.handle = (repeated ? setInterval : setTimeout)(task, ms)
 	}
 
-	dispose() {
+	[Symbol.dispose]() {
 		(this.repeated ? clearTimeout : clearInterval)(this.handle)
 	}
 }

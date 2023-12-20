@@ -1,11 +1,11 @@
 import {Atom, AtomTask} from './atom'
 import {decorator} from './decorator'
 
-export let cell = decorator<CellAtom>('cell', (formula, store) => function (...args) {
+export const cell = decorator<CellAtom>('cell', (formula, store) => function (...args) {
 	let atom = store.get(this)
 	if (!atom) {
 		store.set(this, (atom = new CellAtom(
-			Atom.id(this, formula),
+			Atom.id(this, formula, ''),
 			formula,
 			this
 		)))

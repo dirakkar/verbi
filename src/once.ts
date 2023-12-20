@@ -11,9 +11,9 @@ export let once = decorator<any>('once', (formula, store) => function (this: any
 			result = formula.apply(this)
 		} catch (error) {
 			result = error
-		} finally {
-			store.set(this, result)
 		}
+
+		store.set(this, result)
 	}
 
 	if (result instanceof Error) throw result

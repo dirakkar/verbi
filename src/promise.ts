@@ -1,14 +1,20 @@
+import {fnNop} from './fn'
+
+export type PromiseControlled<T> = Promise<T> & Disposable & {
+	resolve(value: T): void
+	reject(reason: any): void
+}
+
 /**
  * Creates a promise with attached `resolve` and `reject` methods identical to arguments passed to a native Promise's `executor`.
  */
-export let promiseMake = <T = void>(dispose?: () => void) => {
-	let resolve!: (value: T | PromiseLike<T>) => void
-	let reject!: (reason?: any) => void
-
-	return Object.assign(new Promise<T>((res, rej) => {
-		resolve = res
-		reject = rej
-	}), {resolve, reject, dispose})
+export function promiseMake<T = void>(dispose = fnNop) {
+	const result = new Promise((resolve, reject) => {
+		result.resolve = resolve
+		result.reject = reject
+	}) as PromiseControlled<T>
+	result[Symbol.dispose] = dispose
+	return result
 }
 
 

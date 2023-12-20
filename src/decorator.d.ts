@@ -5,7 +5,7 @@ export type Decorator<Store> = {
 	(host: object, key: string, descr?: TypedPropertyDescriptor<Fn>): TypedPropertyDescriptor<Fn>
 }
 
-export let decorator: <Store>(
+export function decorator<Store>(
 	name: string,
 	wrap: (formula: Fn, store: WeakMap<any, Store>) => Fn,
-) => Decorator<Store>
+): Decorator<Store>

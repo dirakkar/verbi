@@ -1,4 +1,7 @@
-export type ListenerTarget = {
+/**
+ * Matches a Node.js-style event emitter or a browser-style event target
+ */
+export type ListenerTargetLike = {
 	addEventListener(event: string, listener: (...payload: any) => void): void
 	removeEventListener(event: string, listener: (...payload: any) => void): void
 } | {
@@ -6,25 +9,28 @@ export type ListenerTarget = {
 	off(event: string, listener: (...payload: any) => void): void
 }
 
+/**
+ * Attempt to infer payload type of an event emitter's event
+ */
 export type ListenerPayload<
-	Target extends ListenerTarget,
-	Type extends string,
+	Target extends ListenerTargetLike,
+	Event extends string,
 > =
-	& Target extends Record<`on${Type}`, infer Listener>
+	& Target extends Record<`on${Event}`, infer Listener>
 	// @ts-expect-error
 	? Parameters<Listener>
-	: Target extends Record<'addEventListener', (type: Type, listener: infer Listener) => void>
+	: Target extends Record<'addEventListener', (event: Event, listener: infer Listener) => void>
 	// @ts-expect-error
 	? Parameters<Listener>
-	: Target extends Record<'on', (type: Type, listener: infer Listener) => void>
+	: Target extends Record<'on', (event: Event, listener: infer Listener) => void>
 	// @ts-expect-error
 	? Parameters<Listener>
 	: never
 
 export class Listener<
-	Target extends ListenerTarget,
+	Target extends ListenerTargetLike,
 	Event extends string
-> {
+> implements Disposable {
 	constructor(
 		public target: Target,
 		public event: Event,
@@ -34,7 +40,7 @@ export class Listener<
 		else this.target.removeEventListener(this.event, this.listener)
 	}
 
-	dispose() {
+	[Symbol.dispose]() {
 		if ('on' in this.target) this.target.off(this.event, this.listener)
 		else this.target.removeEventListener(this.event, this.listener)
 	}
