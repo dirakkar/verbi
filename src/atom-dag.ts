@@ -2,10 +2,10 @@ import {Atom} from './atom'
 import {Dag} from './dag'
 import {rethrowPromise} from './rethrow'
 
-export let atomDag = (root: Atom) => {
-	let dag = new Dag<Atom, number>
+export function atomDag(root: Atom) {
+	const dag = new Dag<Atom, number>
 
-	let visit = (pub: Atom) => {
+	function visit(pub: Atom) {
 		Atom.refresh(pub)
 		rethrowPromise(pub.c)
 

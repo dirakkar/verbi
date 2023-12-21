@@ -1,7 +1,7 @@
 import {Atom} from './atom'
 import {decorator} from './decorator'
 
-export let action = decorator('action', formula => function (this: any, ...args) {
+export const action = decorator('action', formula => function (this: any, ...args) {
 	return Atom.pull(Atom.task(this, formula, args))
 })
 

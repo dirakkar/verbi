@@ -1,44 +1,46 @@
-// here we use function declaration syntax for assertion functions because of this issue:
-// https://github.com/microsoft/TypeScript/issues/34523
-
 import {Typeofs, typeof_} from './typeof'
 import {compare} from './compare'
 
 export namespace assert {
-	let isTrue = (
-		value: boolean,
-		config: AssertionConfig,
-	) => {
+	function isTrue(value: boolean, config: AssertionConfig) {
 		if (value !== true) {
 			throw new Assertion(config)
 		}
 	}
 
-	export let is = <T>(
+	export function is<T>(
 		got: T,
 		expected: T,
-		message = 'Values must be equal',
-	) => isTrue(Object.is(got, expected), {expected, got, message})
+		message = 'Values must be equal'
+	) {
+		return isTrue(Object.is(got, expected), {expected, got, message})
+	}
 
-	export let isnt = <T>(
+	export function isnt<T>(
 		got: T,
 		forbidden: T,
 		message = 'Values must not be equal',
-	) => isTrue(!Object.is(got, forbidden), {got, message})
+	) {
+		isTrue(!Object.is(got, forbidden), {got, message})
+	}
 
-	export let like = <T>(
+	export function like<T>(
 		got: T,
 		expected: T,
 		message = 'Values must be structurally equal',
-	) => isTrue(compare(got, expected), {got, expected, message})
+	) {
+		isTrue(compare(got, expected), {got, expected, message})
+	}
 
-	export let notLike = <T>(
+	export function notLike<T>(
 		got: T,
 		forbidden: T,
 		message = 'Values must not be structurally equal',
-	) => isTrue(!compare(got, forbidden), {got, message})
+	) {
+		isTrue(!compare(got, forbidden), {got, message})
+	}
 
-	export type ThrowsConfig = {
+	export interface ThrowsConfig {
 		message?: string
 		valid?: Function | RegExp
 	}
@@ -55,10 +57,10 @@ export namespace assert {
 		})
 	}
 
-	export let throws = (
+	export function throws(
 		block: () => void,
-		{message, valid}: ThrowsConfig = {}
-	) => {
+		{message, valid}: ThrowsConfig = {},
+	) {
 		let error: any
 		let caught = false
 
@@ -80,10 +82,10 @@ export namespace assert {
 		return error
 	}
 
-	export let throwsAsync = async (
+	export async function throwsAsync(
 		block: () => void,
-		{message, valid}: ThrowsConfig = {}
-	) => {
+		{message, valid}: ThrowsConfig = {},
+	) {
 		let error: any
 		let caught = false
 
@@ -105,15 +107,17 @@ export namespace assert {
 		return error
 	}
 
-	export let matches = (
+	export function matches(
 		string: string,
 		pattern: RegExp,
 		message = `String must match pattern "${pattern}"`
-	) => isTrue(pattern.test(string), {
-		message,
-		expected: pattern,
-		got: string,
-	})
+	) {
+		return isTrue(pattern.test(string), {
+			message,
+			expected: pattern,
+			got: string,
+		})
+	}
 
 
 	export function type<T extends keyof Typeofs>(
