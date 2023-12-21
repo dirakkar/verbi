@@ -1,20 +1,15 @@
 {
-	"name": "verbi-workspace",
-	"private": true,
 	"type": "module",
+	"scripts": {
+		"release": "node infra/bin.js release",
+		"start": "node infra/bin.js start"
+	},
 	"dependencies": {
-		"@rollup/plugin-multi-entry": "^6.0.0",
-		"@rollup/plugin-node-resolve": "^15.2.0",
-		"@rollup/plugin-terser": "^0.4.3",
-		"@types/node": "^20.5.0",
 		"chokidar": "^3.5.3",
 		"devalue": "^4.3.2",
-		"fast-glob": "^3.3.1",
 		"fflate": "^0.8.0",
 		"rollup": "^3.28.0",
-		"rollup-plugin-typescript2": "^0.35.0",
-		"typescript": "^5.1.6",
-		"wrap-ansi": "^8.1.0"
+		"typescript": "^5.1.6"
 	},
 	"prettier": {
 		"semi": false,

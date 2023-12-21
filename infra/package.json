@@ -1,0 +1,10 @@
+{
+	"type": "module",
+	"dependencies": {
+		"@rollup/plugin-multi-entry": "^6.0.0",
+		"@rollup/plugin-node-resolve": "^15.2.0",
+		"@rollup/plugin-terser": "^0.4.3",
+		"@types/node": "^20.5.0",
+		"rollup-plugin-typescript2": "^0.35.0"
+	}
+}
