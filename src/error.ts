@@ -20,36 +20,40 @@ export function errorHandle(error: unknown): ErrorHandleResult {
 	}
 
 	caught.add(error)
-	return [errorSerialize(error), error as Error]
+	return [errorFormat(error), error as Error]
 }
 
-export function errorSerialize(error: unknown) {
+export function errorFormat(error: unknown) {
 	let result = String(error)
 
-	if (error instanceof Error) {
-		result += '\n' + errorStack(error, '  ')
+	const stack = errorStack(error, '  ')
+	if (stack) {
+		result += '\n' + stack
 	}
 
 	return result
 }
 
-const ErrorStackLineIgnore = [
-	'node:internal',
-]
+const ErrorStackLineIgnore = ['node:internal']
+
+const homedir = process.env.HOME
 
 export function errorStack(error: any, prefix = '') {
 	if (!(error instanceof Error)) {
 		return null
 	}
 
-	return (error as Error).stack!
+	return error.stack!
 		.split('\n')
 		.slice(1)
 		.filter(line => {
 			return !ErrorStackLineIgnore.some(substr => line.includes(substr))
 		})
 		.map(line => {
-			return prefix + line.trim()
+			line = prefix + line
+			line = line.replace('file://', '')
+			if (homedir) line = line.replace(homedir, '~')
+			return line
 		})
 		.join('\n')
 }
