@@ -1,15 +1,18 @@
 {
 	"type": "module",
 	"scripts": {
-		"release": "node infra/bin.js release",
-		"start": "node infra/bin.js start"
+		"release": "jiti infra/bin release",
+		"start": "jiti infra/bin start"
 	},
 	"dependencies": {
+		"@types/node": "^20.10.5",
 		"chokidar": "^3.5.3",
 		"devalue": "^4.3.2",
 		"fflate": "^0.8.0",
-		"rollup": "^3.28.0",
-		"typescript": "^5.1.6"
+		"jiti": "^1.21.0",
+		"rollup": "^4.9.1",
+		"typescript": "^5.1.6",
+		"wrap-ansi": "^9.0.0"
 	},
 	"prettier": {
 		"semi": false,
