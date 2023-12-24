@@ -13,8 +13,8 @@ export function errorHandle(error: unknown): ErrorHandleResult {
 
 	if (error instanceof Error === false) {
 		// wrap it with Error so outer scopes won't display the same thing
-		let str = String(error)
-		let rethrow = new Error(str, {cause: error})
+		const str = String(error)
+		const rethrow = new Error(str, {cause: error})
 		caught.add(rethrow)
 		return [str, rethrow]
 	}

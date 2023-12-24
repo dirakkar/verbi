@@ -1,4 +1,4 @@
-export type Disposable = {
+export interface Disposable {
 	[Symbol.dispose](): void
 }
 

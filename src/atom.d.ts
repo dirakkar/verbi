@@ -16,11 +16,7 @@ export class Atom<F extends Fn = Fn> {
 	static peek<T>(formula: () => T): T | undefined
 
 	static reap(): void
-	static task<F extends Fn>(
-		host: ThisParameterType<F>,
-		formula: F,
-		args: Parameters<F>
-	): AtomTask<F>
+	static task<F extends Fn>(host: ThisParameterType<F>, formula: F, args: Parameters<F>): AtomTask<F>
 	static id(host: object, formula: Fn, key: string): string
 
 	static pull<F extends Fn>(atom: Atom<F>): ReturnType<F>
