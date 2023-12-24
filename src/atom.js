@@ -1,7 +1,6 @@
 import {compare} from './compare'
 import {disposableIs} from './disposable'
-import {fnIs} from './fn'
-import {noop} from './noop'
+import {fnIs, fnNop} from './fn'
 import {promiseLike} from './promise'
 import {rethrow} from './rethrow'
 
@@ -19,7 +18,7 @@ export class Atom {
 	}
 
 	static keep() {
-		if (Atom.linking) Atom.linking.reap = noop
+		if (Atom.linking) Atom.linking.reap = fnNop
 	}
 
 	static peek(fn) {
@@ -153,7 +152,7 @@ export class Atom {
 
 				result = Object.assign(
 					result.then(set, set),
-					{dispose: result.dispose ?? noop},
+					{dispose: result.dispose ?? fnNop},
 				)
 				handled.add(result)
 			}
@@ -167,7 +166,7 @@ export class Atom {
 					result.finally(() => {
 						if (x.c === result) Atom.absorb(x)
 					}),
-					{dispose: result.dispose ?? noop},
+					{dispose: result.dispose ?? fnNop},
 				)
 				handled.add(result)
 			}

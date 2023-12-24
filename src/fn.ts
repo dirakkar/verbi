@@ -8,7 +8,7 @@ export type Fn<
 > = (this: Host, ...args: Args) => Result
 
 /**
- * Checks if `val` is a `Formula`.
+ * Checks if value is a callable function.
  */
 export function fnIs(v: unknown): v is Fn {
 	// https://stackoverflow.com/a/56035104
@@ -18,12 +18,20 @@ export function fnIs(v: unknown): v is Fn {
 /**
  * Change a function's name.
  */
-export function fnName<F extends Function>(f: F, next: string) {
-	Reflect.defineProperty(f, 'name', {value: next})
+export function fnName<F extends Function>(f: F, name: string) {
+	Reflect.defineProperty(f, 'name', {value: name})
 	return f
 }
 
 /**
  * Does nothing.
  */
-export function fnNop() {}
+export function fnNoop() {
+}
+
+/**
+ * Returns the passed value.
+ */
+export function fnId<T>(v: T) {
+	return v
+}

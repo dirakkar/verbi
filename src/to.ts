@@ -1,6 +1,5 @@
 import {Atom} from './atom'
-import {Fn, fnName, fnIs} from './fn'
-import {noop} from './noop'
+import {Fn, fnName, fnIs, fnNoop} from './fn'
 import {promiseLike} from './promise'
 import {rethrow} from './rethrow'
 
@@ -56,7 +55,7 @@ export let toAsync = to('toAsync', formula => {
 
 			await task.c
 
-			if (task.t === -4) await new Promise(noop)
+			if (task.t === -4) await new Promise(fnNoop)
 		}
 	}
 }) as <T extends object>(val: T, name?: string) => ToAsync<T>
