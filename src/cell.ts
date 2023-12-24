@@ -13,11 +13,7 @@ export const cell = decorator<CellAtom>('cell', (formula, store) => function (..
 	}
 
 	if (!args.length || args[0] === undefined) {
-		return (
-			Atom.linking instanceof AtomTask
-				? Atom.snapshot
-				: Atom.pull
-		)(atom)
+		return (Atom.linking instanceof AtomTask ? Atom.snapshot : Atom.pull)(atom)
 	}
 	return Atom.push(atom, args)
 })

@@ -2,12 +2,12 @@ import {action} from './action'
 import {Model} from './model'
 import {toSync} from './to'
 
-export let tygerFetch = toSync((
+export const tygerFetch = toSync((
 	info: RequestInfo,
 	init: RequestInit = {},
 	fetch = globalThis.fetch
 ) => {
-	let ctrl = new AbortController
+	const ctrl = new AbortController
 	let abortable = true
 
 	return Object.assign(
@@ -17,7 +17,7 @@ export let tygerFetch = toSync((
 				abortable = false
 			}),
 
-		{ dispose() {
+		{ [Symbol.dispose]() {
 			if (abortable) {
 				ctrl.abort()
 				abortable = false
@@ -62,7 +62,7 @@ export class TygerFetchResponse extends Model {
 	 */
 	success() {
 		if (this.status() !== 'Successful') {
-			let err = new TygerFetchError(this.statusText())
+			const err = new TygerFetchError(this.statusText())
 			err.status = this.statusCode()
 			throw err
 		}

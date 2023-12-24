@@ -7,48 +7,15 @@ import {cell} from './cell'
 import {decorator} from './decorator'
 import {action} from './action'
 
-
 export type TygerFileType = 'file' | 'dir' | 'link'
 
-export type TygerFileStat = {
+export interface TygerFileStat {
 	type: TygerFileType
 	size: number | bigint
 	atime: Date
 	ctime: Date
 	mtime: Date
 }
-
-let statFrom = (path: string, native: fs.Stats | fs.BigIntStats): TygerFileStat => {
-	let type: TygerFileType | undefined
-
-	if (native.isFile()) type = 'file'
-	if (native.isDirectory()) type = 'dir'
-	if (native.isSymbolicLink()) type = 'link'
-
-	if (!type) throw new TygerFileError(path, 'Unsupported file type')
-
-	return {
-		type,
-		size: native.size,
-		atime: native.atime,
-		mtime: native.mtime,
-		ctime: native.ctime,
-	}
-}
-
-export class TygerFileError extends Error {
-	constructor(public path: string, cause?: any) {
-		super(cause, {cause})
-	}
-}
-
-let withFs = decorator('withFs', formula => function (this: TygerFile, ...args) {
-	try {
-		return formula.apply(this, args)
-	} catch (err: any) {
-		throw new TygerFileError(this.path, err)
-	}
-})
 
 export class TygerFile extends Model {
 	static from(filepath: string) {
@@ -94,9 +61,9 @@ export class TygerFile extends Model {
 
 		if (next) return next!
 
-		let stat = fs.statSync(this.path, {throwIfNoEntry: false})
+		const stat = fs.statSync(this.path, {throwIfNoEntry: false})
 		if (!stat) return null
-		return statFrom(this.path, stat)
+		return tygerFileStat(this.path, stat)
 	}
 
 	/**
@@ -105,7 +72,7 @@ export class TygerFile extends Model {
 	 * Pushing `false` to an existing file removes it.
 	 */
 	@cell @withFs exists(next?: boolean) {
-		let prev = !!this.stat()
+		const prev = !!this.stat()
 		if (next === undefined) return prev
 		if (next === prev) return prev
 
@@ -126,7 +93,7 @@ export class TygerFile extends Model {
 	}
 
 	@cell watch() {
-		let watcher = chokidar.watch(this.path, {
+		const watcher = chokidar.watch(this.path, {
 			persistent: true,
 			depth: 0,
 			ignoreInitial: true,
@@ -135,7 +102,7 @@ export class TygerFile extends Model {
 			},
 		})
 			.on('all', (event, filepath) => {
-				let file = TygerFile.from(filepath)
+				const file = TygerFile.from(filepath)
 
 				file.stat(null)
 
@@ -151,7 +118,7 @@ export class TygerFile extends Model {
 
 	@cell @withFs text(next?: string, virtual?: 'virtual') {
 		if (virtual) {
-			let now = new Date
+			const now = new Date
 			this.stat({
 				type: 'file',
 				size: 0,
@@ -172,7 +139,7 @@ export class TygerFile extends Model {
 
 	@cell @withFs buffer(next?: Uint8Array, virtual?: 'virtual') {
 		if (virtual) {
-			let now = new Date
+			const now = new Date
 			this.stat({
 				type: 'file',
 				size: 0,
@@ -216,15 +183,15 @@ export class TygerFile extends Model {
 	 * Unlinks all nested files.
 	 */
 	@withFs purge() {
-		for (let kid of this.kids()) {
+		for (const kid of this.kids()) {
 			kid.exists(false)
 		}
 	}
 
 	find(include?: RegExp, exclude?: RegExp) {
-		let result: TygerFile[] = []
+		const result: TygerFile[] = []
 
-		for (let kid of this.kids()) {
+		for (const kid of this.kids()) {
 			if (exclude?.test(kid.path)) continue
 			if (!include || include.test(kid.path)) result.push(kid)
 			if (kid.type() === 'dir') result.push(...kid.find(include, exclude))
@@ -233,3 +200,35 @@ export class TygerFile extends Model {
 		return result
 	}
 }
+
+function tygerFileStat(path: string, native: fs.Stats | fs.BigIntStats): TygerFileStat {
+	let type: TygerFileType | undefined
+
+	if (native.isFile()) type = 'file'
+	if (native.isDirectory()) type = 'dir'
+	if (native.isSymbolicLink()) type = 'link'
+
+	if (!type) throw new TygerFileError(path, 'Unsupported file type')
+
+	return {
+		type,
+		size: native.size,
+		atime: native.atime,
+		mtime: native.mtime,
+		ctime: native.ctime,
+	}
+}
+
+export class TygerFileError extends Error {
+	constructor(public path: string, cause?: any) {
+		super(cause, {cause})
+	}
+}
+
+const withFs = decorator('withFs', formula => function (this: TygerFile, ...args) {
+	try {
+		return formula.apply(this, args)
+	} catch (err: any) {
+		throw new TygerFileError(this.path, err)
+	}
+})

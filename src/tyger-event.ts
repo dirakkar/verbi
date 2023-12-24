@@ -10,10 +10,13 @@ export type TygerEventReturn<T> = {
 	payload: T
 }
 
-export let tygerEvent = <
+export function tygerEvent<
 	Target extends ListenerTargetLike,
 	Event extends string,
->(target: Target, event: Event) => {
+>(
+	target: Target,
+	event: Event,
+) {
 	return events({target, event}) as TygerEventReturn<ListenerPayload<Target, Event>> | undefined
 }
 
@@ -34,6 +37,6 @@ const listen = dict('', (config: EventConfig) => {
 		(...payload) => events(config, {
 			at: tygerNowPrecise(),
 			payload,
-		})
+		}),
 	)
 })
