@@ -1,9 +1,7 @@
-import {Disposable} from './disposable'
-
 /**
  * A disposable wrapper around native timers.
  */
-export class Timer implements Disposable {
+export class Timer {
 	handle: any
 
 	constructor(ms: number, task: () => void, public repeated = false) {

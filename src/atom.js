@@ -1,11 +1,11 @@
 import {compare} from './compare'
-import {disposableIs} from './disposable'
-import {fnIs, fnNop} from './fn'
+import {disposeAble} from './dispose'
+import {fnIs, fnNoop} from './fn'
 import {promiseLike} from './promise'
 import {rethrow} from './rethrow'
 
 const handled = new WeakSet
-const reaping = new Set
+let reaping = new Set
 let unstable = false
 let peek = false
 
@@ -18,7 +18,7 @@ export class Atom {
 	}
 
 	static keep() {
-		if (Atom.linking) Atom.linking.reap = fnNop
+		if (Atom.linking) Atom.linking.reap = fnNoop
 	}
 
 	static peek(fn) {
@@ -56,12 +56,7 @@ export class Atom {
 			) throw new Error('Non-idempotency detected')
 		}
 
-		return new AtomTask(
-			Atom.id(host, fn, '...'),
-			fn,
-			host,
-			args
-		)
+		return new AtomTask(Atom.id(host, fn, '...'), fn, host, args)
 	}
 
 	static id(host, fn, key) {
@@ -138,6 +133,7 @@ export class Atom {
 		Atom.linking = x
 
 		let result
+		let promise
 
 		try {
 			if (x.p === 0) result = x.f.call(x.h)
@@ -149,12 +145,7 @@ export class Atom {
 					if (x.c === result) Atom.set(x, res)
 					return res
 				}
-
-				result = Object.assign(
-					result.then(set, set),
-					{dispose: result.dispose ?? fnNop},
-				)
-				handled.add(result)
+				promise = result.then(set, set)
 			}
 		} catch (cause) {
 			result = promiseLike(cause) || cause instanceof Error
@@ -162,14 +153,16 @@ export class Atom {
 				: new Error(cause, {cause})
 
 			if (promiseLike(result) && !handled.has(result)) {
-				result = Object.assign(
-					result.finally(() => {
-						if (x.c === result) Atom.absorb(x)
-					}),
-					{dispose: result.dispose ?? fnNop},
-				)
-				handled.add(result)
+				promise = result.finally(() => {
+					if (x.c === result) Atom.absorb(x)
+				})
 			}
+		}
+
+		if (promise) {
+			if (promise[Symbol.dispose]) result[Symbol.dispose] = promise[Symbol.dispose]
+			if (promise[Symbol.asyncDispose]) result[Symbol.dispose] = promise[Symbol.dispose]
+			handled.add(result = promise)
 		}
 
 		if (!promiseLike(result)) Atom.cut(x)
@@ -200,9 +193,12 @@ export class Atom {
 			}
 		} else {
 			if (!compare(prev, next)) {
-				if (disposableIs(prev) && Atom.owning.get(prev) === x) prev.dispose()
+				if (Atom.owning.get(prev) === x) {
+					if (prev[Symbol.dispose]) prev[Symbol.dispose]()
+					else if (prev[Symbol.asyncDispose]) prev[Symbol.asyncDispose]().catch(console.error)
+				}
 
-				if (disposableIs(next) && !Atom.owning.has(next)) {
+				if (disposeAble(next) && !Atom.owning.has(next)) {
 					Atom.owning.set(next, x)
 					try {
 						next[Symbol.toStringTag] = x.i

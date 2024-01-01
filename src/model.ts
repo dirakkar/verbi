@@ -25,7 +25,7 @@ export class Model {
 		return Object.assign(new this, config)
 	}
 
-	dispose() {
+	[Symbol.dispose]() {
 	}
 
 	toString() {
