@@ -4,8 +4,9 @@ import chokidar from 'chokidar'
 import {Model} from './model'
 import {dict} from './dict'
 import {cell} from './cell'
-import {decorator} from './decorator'
 import {action} from './action'
+
+export type TygerFileContent = Uint8Array | string
 
 export type TygerFileType = 'file' | 'dir' | 'link'
 
@@ -61,9 +62,14 @@ export class TygerFile extends Model {
 
 		if (next) return next!
 
-		const stat = fs.statSync(this.path, {throwIfNoEntry: false})
+		try {
+			var stat = fs.statSync(this.path, {throwIfNoEntry: false})
+		} catch (cause) {
+			throw new TygerFileError(this.path, cause)
+		}
+
 		if (!stat) return null
-		return tygerFileStat(this.path, stat)
+		return tygerFileStatFrom(this.path, stat)
 	}
 
 	/**
@@ -71,16 +77,20 @@ export class TygerFile extends Model {
 	 * Pushing `true` to a non-existent file creates a directory.
 	 * Pushing `false` to an existing file removes it.
 	 */
-	@cell @withFs exists(next?: boolean) {
+	@cell exists(next?: boolean) {
 		const prev = !!this.stat()
 		if (next === undefined) return prev
 		if (next === prev) return prev
 
-		if (next) {
-			this.dir().exists(true)
-			fs.mkdirSync(this.path)
-		} else {
-			fs.rmSync(this.path, {recursive: true})
+		try {
+			if (next) {
+				this.dir().exists(true)
+				fs.mkdirSync(this.path)
+			} else {
+				fs.rmSync(this.path, {recursive: true})
+			}
+		} catch (cause) {
+			throw new TygerFileError(this.path, cause)
 		}
 
 		this.stat(null)
@@ -101,22 +111,32 @@ export class TygerFile extends Model {
 				stabilityThreshold: 100,
 			},
 		})
-			.on('all', (event, filepath) => {
-				const file = TygerFile.from(filepath)
+		watcher.on('all', (event, p) => {
+			const file = TygerFile.from(p)
 
-				file.stat(null)
+			file.stat(null)
 
-				if (event === 'change') this.stat(null)
-				else file.dir().stat(null)
-			})
-			.on('error', console.error)
+			if (event === 'change') this.stat(null)
+			else file.dir().stat(null)
+		})
+		watcher.on('error', console.error)
 
-		return { dispose() {
+		return { [Symbol.dispose]() {
 			watcher.close()
 		} }
 	}
 
-	@cell @withFs text(next?: string, virtual?: 'virtual') {
+	@cell text(next?: string, virtual?: 'virtual') {
+		return this.content('utf8', next, virtual)
+	}
+
+	@cell buffer(next?: Uint8Array, virtual?: 'virtual') {
+		return this.content('binary', next, virtual)
+	}
+
+	private content(encoding: 'binary', next?: Uint8Array, virtual?: 'virtual'): Uint8Array
+	private content(encoding: 'utf8', next?: string, virtual?: 'virtual'): string
+	private content(encoding: 'binary' | 'utf8', next?: TygerFileContent, virtual?: 'virtual'): string | Uint8Array {
 		if (virtual) {
 			const now = new Date
 			this.stat({
@@ -129,60 +149,63 @@ export class TygerFile extends Model {
 			return next!
 		}
 
-		if (next === undefined) {
-			return fs.readFileSync(this.path, 'utf-8')
-		} else {
-			fs.writeFileSync(this.path, next)
-			return next
+		try {
+			if (next === undefined) {
+				return fs.readFileSync(this.path, encoding)
+			} else {
+				fs.writeFileSync(this.path, next)
+				return next
+			}
+		} catch (cause) {
+			throw new TygerFileError(this.path, cause)
 		}
 	}
 
-	@cell @withFs buffer(next?: Uint8Array, virtual?: 'virtual') {
-		if (virtual) {
-			const now = new Date
-			this.stat({
-				type: 'file',
-				size: 0,
-				ctime: now,
-				mtime: now,
-				atime: now,
-			})
-			return next!
+	@action append(data: Uint8Array | string) {
+		try {
+			fs.appendFileSync(this.path, data)
+		} catch (cause) {
+			throw new TygerFileError(this.path, cause)
 		}
-
-		if (next === undefined) {
-			return fs.readFileSync(this.path)
-		} else {
-			fs.writeFileSync(this.path, next)
-			return next
-		}
-	}
-
-	@withFs @action append(data: Uint8Array | string) {
-		fs.appendFileSync(this.path, data)
 	}
 
 	@cell kids() {
 		if (this.stat()?.type !== 'dir') return []
-		return fs.readdirSync(this.path).map(kid => this.join(kid))
+		try {
+			return fs.readdirSync(this.path).map(kid => this.join(kid))
+		} catch (cause) {
+			throw new TygerFileError(this.path, cause)
+		}
 	}
 
-	@withFs copy(to: string | TygerFile) {
+	copy(to: string | TygerFile) {
 		if (to instanceof TygerFile) to = to.path
-		fs.cpSync(this.path, to)
+
+		try {
+			fs.cpSync(this.path, to)
+		} catch (cause) {
+			throw new TygerFileError(this.path, cause)
+		}
+
 		return TygerFile.from(to)
 	}
 
-	@withFs move(to: string | TygerFile) {
+	move(to: string | TygerFile) {
 		if (to instanceof TygerFile) to = to.path
-		fs.renameSync(this.path, to)
+
+		try {
+			fs.renameSync(this.path, to)
+		} catch (cause) {
+			throw new TygerFileError(this.path, cause)
+		}
+
 		return TygerFile.from(to)
 	}
 
 	/**
 	 * Unlinks all nested files.
 	 */
-	@withFs purge() {
+	purge() {
 		for (const kid of this.kids()) {
 			kid.exists(false)
 		}
@@ -201,7 +224,7 @@ export class TygerFile extends Model {
 	}
 }
 
-function tygerFileStat(path: string, native: fs.Stats | fs.BigIntStats): TygerFileStat {
+function tygerFileStatFrom(path: string, native: fs.Stats | fs.BigIntStats): TygerFileStat {
 	let type: TygerFileType | undefined
 
 	if (native.isFile()) type = 'file'
@@ -224,11 +247,3 @@ export class TygerFileError extends Error {
 		super(cause, {cause})
 	}
 }
-
-const withFs = decorator('withFs', formula => function (this: TygerFile, ...args) {
-	try {
-		return formula.apply(this, args)
-	} catch (err: any) {
-		throw new TygerFileError(this.path, err)
-	}
-})
