@@ -1,16 +1,19 @@
 {
 	"type": "module",
 	"scripts": {
-		"release": "jiti infra/bin release",
+		"build": "jiti infra/bin build",
 		"start": "jiti infra/bin start"
 	},
 	"dependencies": {
+		"@rollup/plugin-node-resolve": "^15.2.3",
 		"@types/node": "^20.10.5",
 		"chokidar": "^3.5.3",
 		"devalue": "^4.3.2",
 		"fflate": "^0.8.0",
 		"jiti": "^1.21.0",
 		"rollup": "^4.9.1",
+		"rollup-plugin-typescript2": "^0.36.0",
+		"tslib": "^2.6.2",
 		"typescript": "^5.1.6",
 		"wrap-ansi": "^9.0.0"
 	},

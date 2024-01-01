@@ -21,7 +21,7 @@ export function arrayGroup<Item, Group extends string>(
 ) {
 	let result = {} as Record<Group, Item[]>
 	arr.forEach((item, index) => {
-		(result[getGroup(item, index)] ??= []).push(item)
+		;(result[getGroup(item, index)] ??= []).push(item)
 	})
 	return result as RecSimplify<typeof result>
 }
@@ -43,16 +43,21 @@ export function arrayDedupe<Item>(arr: Item[]) {
 	return [...new Set(arr)]
 }
 
-export function arrayReplace<
-	Item,
-	Target extends Item,
-	Replacement extends Item
->(
-	arr: Item[],
+export function arrayReplace<Item, Target extends Item, Replacement extends Item>(
+	arr: readonly Item[],
 	target: Target,
 	replacement: Replacement
 ) {
 	return arr.map(item => {
 		return compare(item, target) ? replacement : item
 	}) as Array<Exclude<Item, Target> | Replacement>
+}
+
+/**
+ * Filters out `null` and `undefined` array items
+ */
+export function arrayDefined<Item>(arr: readonly Item[]) {
+	return arr.filter((item): item is Exclude<Item, null | undefined> => {
+		return item != null
+	})
 }
