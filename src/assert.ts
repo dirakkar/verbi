@@ -58,53 +58,51 @@ export namespace assert {
 	}
 
 	export function throws(
+		block: () => Promise<any>,
+		valid: Function | RegExp,
+		message?: string,
+	): Promise<void>
+	export function throws(
 		block: () => void,
-		{message, valid}: ThrowsConfig = {},
-	) {
+		valid: Function | RegExp,
+		message?: string,
+	): void
+	export function throws(
+		block: () => Promise<void> | void,
+		valid: Function | RegExp,
+		message?: string,
+	): Promise<void> | void {
 		let error: any
 		let caught = false
 
 		try {
-			block()
+			let result = block()
+			if (result instanceof Promise) {
+				result = result.catch(_error => {
+					caught = true
+					_error
+				})
+				result = result.finally(() => {
+					throwsCheck(valid, message, caught, error)
+				})
+				return result
+			}
 		} catch (_error) {
 			caught = true
 			error = _error
 		}
 
-		isTrue(caught, {message: message ?? 'Function must throw'})
-
-		if (valid instanceof RegExp) {
-			matches(String(error), valid, message ?? `String representation of an error must match "${valid}"`)
-		} else if (valid) {
-			isInstance(error, valid, `Thrown error must be an instance of "${valid.name}"`)
-		}
-
-		return error
+		throwsCheck(valid, message, caught, error)
 	}
 
-	export async function throwsAsync(
-		block: () => void,
-		{message, valid}: ThrowsConfig = {},
-	) {
-		let error: any
-		let caught = false
-
-		try {
-			await block()
-		} catch (_error) {
-			caught = true
-			error = _error
-		}
-
+	function throwsCheck(valid: Function | RegExp, message: string | undefined, caught: boolean, error: unknown) {
 		isTrue(caught, {message: message ?? 'Function must throw'})
 
 		if (valid instanceof RegExp) {
 			matches(String(error), valid, message ?? `String representation of an error must match "${valid}"`)
 		} else if (valid) {
-			isInstance(error, valid, `Thrown error must be an instance of "${valid.name}"`)
+			isInstance(error, valid, message ?? `Thrown error must be an instance of "${valid.name}"`)
 		}
-
-		return error
 	}
 
 	export function matches(
