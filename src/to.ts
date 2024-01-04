@@ -1,24 +1,7 @@
-import {Atom} from './atom'
+import {tyger} from './tyger'
 import {Fn, fnName, fnIs, fnNoop} from './fn'
 import {promiseLike} from './promise'
 import {rethrow} from './rethrow'
-
-let to = (name: string, wrap: (formula: Fn) => Fn) => fnName((val: object, name?: string) => {
-	if (fnIs(val)) {
-		return name
-			? fnName(wrap(val), name)
-			: wrap(val)
-	}
-
-	return new Proxy(val, {
-		get(_, key) {
-			let method = val[key as never]
-			// TODO make it more performant?
-			if (fnIs(method)) return wrap(method).bind(val)
-			return method
-		}
-	})
-}, name)
 
 export type ToSync<T> = T extends Fn ? ToSyncMethod<T> : {
 	[K in keyof T]: T[K] extends Fn ? ToSyncMethod<T[K]> : T[K]
@@ -28,8 +11,11 @@ export type ToSyncMethod<T extends Fn> = T extends Fn<any, infer Args, Promise<i
 	? (...args: Args) => Result
 	: T
 
-export let toSync = to('toSync', formula => function (...args) {
-	return Atom.pull(Atom.task(this, formula, args))
+export const toSync = to('toSync', formula => {
+	const Task = tyger.Task.for(formula)
+	return function (...args) {
+		return tyger.pull(Task.get(args, this))
+	}
 }) as <T extends object>(val: T, name?: string) => ToSync<T>
 
 export type ToAsync<T> = T extends Fn ? ToAsyncMethod<T> : {
@@ -40,15 +26,16 @@ export type ToAsyncMethod<T extends Fn> = T extends Fn<any, infer Args, infer Re
 	? (...args: Args) => Promise<Result>
 	: T
 
-export let toAsync = to('toAsync', formula => {
-	let task: Atom | undefined
+export const toAsync = to('toAsync', formula => {
+	const Task = tyger.Task.for(formula)
+	let task: tyger.Task | undefined
 
 	return async function (...args) {
-		task?.dispose()
-		task = Atom.task(this, formula, args)
+		if (task) tyger.kill(task)
+		task = Task.get(args, this)
 
 		for (;;) {
-			Atom.refresh(task)
+			tyger.fresh(task)
 
 			if (task.c instanceof Error) rethrow(task.c)
 			if (!promiseLike(task.c)) return task.c
@@ -60,3 +47,19 @@ export let toAsync = to('toAsync', formula => {
 	}
 }) as <T extends object>(val: T, name?: string) => ToAsync<T>
 
+function to(name: string, wrap: (formula: Fn) => Fn) {
+	return fnName((val: object, name?: string) => {
+		if (fnIs(val)) {
+			return name ? fnName(wrap(val), name) : wrap(val)
+		}
+
+		return new Proxy(val, {
+			get(_, key) {
+				const method = val[key as never]
+				// TODO make it more performant?
+				if (fnIs(method)) return wrap(method).bind(val)
+				return method
+			}
+		})
+	}, name)
+}

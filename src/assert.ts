@@ -78,14 +78,12 @@ export namespace assert {
 		try {
 			let result = block()
 			if (result instanceof Promise) {
-				result = result.catch(_error => {
+				return result.catch(_error => {
 					caught = true
-					_error
-				})
-				result = result.finally(() => {
+					error = _error
+				}).finally(() => {
 					throwsCheck(valid, message, caught, error)
 				})
-				return result
 			}
 		} catch (_error) {
 			caught = true
@@ -108,7 +106,7 @@ export namespace assert {
 	export function matches(
 		string: string,
 		pattern: RegExp,
-		message = `String must match pattern "${pattern}"`
+		message = `String must match "${pattern}"`
 	) {
 		return isTrue(pattern.test(string), {
 			message,

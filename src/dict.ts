@@ -1,32 +1,35 @@
-import {Atom, AtomTask} from './atom'
+import {tyger} from './tyger'
 import {decorator} from './decorator'
 import {valKey} from './val'
 
-export const dict = decorator<Map<string, DictAtom>>('dict', (formula, store) => function(...args) {
-	let atoms = store.get(this)
-	if (!atoms) {
-		store.set(this, (atoms = new Map))
-	}
+export const dict = decorator<Map<string, DictAtom>>('dict', (formula, store) => {
+	const Atom = DictAtom.for(formula) as typeof DictAtom
+	return function (...args) {
+		let atoms = store.get(this)
+		if (!atoms) {
+			store.set(this, (atoms = new Map))
+		}
 
-	const id = Atom.id(this, formula, valKey(args[0]))
+		const key = valKey(args[0])
 
-	let atom = atoms.get(id)
-	if (!atom) {
-		atoms.set(id, (atom = new DictAtom(id, formula, this, [args[0]])))
-		atom.store = atoms
-	}
+		let atom = atoms.get(key)
+		if (!atom) {
+			atoms.set(key, (atom = new Atom(this, [args[0]])))
+			atom.store = atoms
+		}
 
-	if (args.length <= 1 || args[1] === undefined) {
-		return (Atom.linking instanceof AtomTask ? Atom.snapshot : Atom.pull)(atom)
+		if (args.length < 2 || args[1] === undefined) {
+			return tyger.once(atom)
+		}
+		return tyger.push(atom, args)
 	}
-	return Atom.push(atom, args)
 })
 
-export class DictAtom extends Atom {
+export class DictAtom extends tyger.Atom {
 	store!: Map<string, DictAtom>
+	key!: string
 
-	dispose() {
-		super.dispose()
-		this.store.delete(this.i)
+	die() {
+		this.store.delete(this.key)
 	}
 }

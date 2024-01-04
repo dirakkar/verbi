@@ -1,10 +1,14 @@
 import {dict} from './dict'
 
-export const tygerInterval = dict('tygerInterval', (ms: number, _hit?: true) => {
-	const handle = setTimeout(() => tygerInterval(ms, true), ms)
+export function tygerInterval(ms: number) {
+	return intervals(ms).time
+}
+
+export const intervals = dict('', (ms: number, hit?: true) => {
+	const handle = setTimeout(() => intervals(ms, true), ms)
 
 	return {
-		now: Date.now(),
-		[Symbol.dispose]: () => clearTimeout(handle)
+		time: Date.now(),
+		[Symbol.dispose]: () => clearTimeout(handle),
 	}
 })

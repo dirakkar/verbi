@@ -1,28 +1,26 @@
-import {Atom, AtomTask} from './atom'
+import {tyger} from './tyger'
 import {decorator} from './decorator'
 
-export const cell = decorator<CellAtom>('cell', (formula, store) => function (...args) {
-	let atom = store.get(this)
-	if (!atom) {
-		store.set(this, (atom = new CellAtom(
-			Atom.id(this, formula, ''),
-			formula,
-			this
-		)))
-		atom.store = store
-	}
+export const cell = decorator<CellAtom>('cell', (formula, store) => {
+	const Atom = CellAtom.for(formula) as typeof CellAtom
+	return function (...args) {
+		let atom = store.get(this)
+		if (!atom) {
+			store.set(this, (atom = new Atom(formula, this)))
+			atom.store = store
+		}
 
-	if (!args.length || args[0] === undefined) {
-		return (Atom.linking instanceof AtomTask ? Atom.snapshot : Atom.pull)(atom)
+		if (!args.length || args[0] === undefined) {
+			return tyger.once(atom)
+		}
+		return tyger.push(atom, args)
 	}
-	return Atom.push(atom, args)
 })
 
-export class CellAtom extends Atom {
+export class CellAtom extends tyger.Atom {
 	store!: WeakMap<object, CellAtom>
 
-	dispose() {
-		super.dispose()
-		this.store.delete(this.h)
+	die() {
+		this.store.delete(this.h!)
 	}
 }

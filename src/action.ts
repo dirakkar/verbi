@@ -1,9 +1,9 @@
-import {Atom} from './atom'
+import {tyger} from './tyger'
 import {decorator} from './decorator'
 
-export const action = decorator('action', formula => function (this: any, ...args) {
-	return Atom.pull(Atom.task(this, formula, args))
+export const action = decorator('action', formula => {
+	const Task = tyger.Task.for(formula)
+	return function (this: any, ...args) {
+		return tyger.pull(Task.get(args, this))
+	}
 })
-
-action(Atom, 'push')
-action(Atom, 'snapshot')
