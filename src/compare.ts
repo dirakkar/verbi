@@ -1,3 +1,5 @@
+import {objectCheck} from './object'
+
 const cache = new WeakMap
 
 /**
@@ -13,12 +15,8 @@ const cache = new WeakMap
 export function compare(a: any, b: any) {
 	if (Object.is(a, b)) return true
 
-	if (
-		a === null ||
-		b === null ||
-		typeof a !== 'object' ||
-		typeof b !== 'object'
-	) return false
+	// disable predicate signature to avoid narrowing of `a`
+	if (!(objectCheck as (v: any) => boolean)(a)) return false
 
 	const prototype = Reflect.getPrototypeOf(a)
 	if (prototype !== Reflect.getPrototypeOf(b)) return false

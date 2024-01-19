@@ -1,4 +1,4 @@
-import {dictCheck} from './dict'
+import {objectCheck, objectPlainCheck} from './object'
 
 let objectId = 0
 const objects = new WeakMap<object, number>
@@ -11,14 +11,14 @@ const objects = new WeakMap<object, number>
 export function valueKey(v: any) {
 	return JSON.stringify(v, (_, v) => {
 		if (
-			v === null ||
-			(typeof v !== 'object' && typeof v !== 'object') ||
+			!objectCheck(v) ||
+			typeof v === 'function' ||
 			Array.isArray(v)
 		) return v
 
-		if (dictCheck(v)) return v
+		if (objectPlainCheck(v)) return v
 		if ('toJSON' in v) return v
-		if (v instanceof RegExp) return String(v)
+		if ((v as any) instanceof RegExp) return String(v)
 
 		return objects.get(v) ?? (objects.set(v, ++objectId), objectId)
 	})
