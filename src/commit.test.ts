@@ -1,4 +1,4 @@
-import assert from 'node:assert'
+import assert from 'node:assert/strict'
 import {commitMessageFromString} from './commit'
 
 void function parse_all_components() {
