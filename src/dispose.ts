@@ -1,8 +1,9 @@
 import {objectCheck} from './object'
 
-export type DisposeAble =
-	| {[Symbol.dispose](): void}
-	| {[Symbol.asyncDispose](): Promise<void>}
+export interface DisposeAble {
+	[Symbol.dispose]?: () => void
+	[Symbol.asyncDispose]?: () => Promise<void>
+}
 
 // TODO remove when dispose symbols are added to browsers
 // @ts-ignore
@@ -15,7 +16,6 @@ export function disposeAble(v: any): v is DisposeAble {
 }
 
 export function dispose(v: DisposeAble) {
-	return Symbol.dispose in v
-		? v[Symbol.dispose]()
-		: v[Symbol.asyncDispose]().catch(console.error)
+	if (Symbol.dispose in v) v[Symbol.dispose]!()
+	if (Symbol.asyncDispose in v) v[Symbol.asyncDispose]!().catch(console.error)
 }
