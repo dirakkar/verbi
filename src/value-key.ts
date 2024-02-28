@@ -10,15 +10,15 @@ const objects = new WeakMap<object, number>
  */
 export function valueKey(v: any) {
 	return JSON.stringify(v, (_, v) => {
-		if (
+		if(
 			!objectCheck(v) ||
 			typeof v === 'function' ||
 			Array.isArray(v)
 		) return v
 
-		if (objectPlainCheck(v)) return v
-		if ('toJSON' in v) return v
-		if ((v as any) instanceof RegExp) return String(v)
+		if(objectPlainCheck(v)) return v
+		if('toJSON' in v) return v
+		if((v as any) instanceof RegExp) return String(v)
 
 		return objects.get(v) ?? (objects.set(v, ++objectId), objectId)
 	})

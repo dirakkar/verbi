@@ -13,50 +13,51 @@ const cache = new WeakMap
  *	- iterables
  */
 export function compare(a: any, b: any) {
-	if (Object.is(a, b)) return true
+	if(Object.is(a, b)) return true
 
-	// disable predicate signature to avoid narrowing of `a`
-	if (!(objectCheck as (v: any) => boolean)(a)) return false
+	// hide it from the checker that objectCheck is a predicate to avoid
+	// narrowing of `a`
+	if( !(objectCheck as (v: any) => boolean)(a) ) return false
 
 	const prototype = Reflect.getPrototypeOf(a)
-	if (prototype !== Reflect.getPrototypeOf(b)) return false
+	if(prototype !== Reflect.getPrototypeOf(b)) return false
 
-	if (a instanceof Date) return a.getTime() === b.getTime()
-	if (a instanceof Error) return a.stack === b.stack
-	if (a instanceof RegExp) return String(a) === String(b)
+	if(a instanceof Date) return a.getTime() === b.getTime()
+	if(a instanceof Error) return a.stack === b.stack
+	if(a instanceof RegExp) return String(a) === String(b)
 
 	let aCache = cache.get(a)
-	if (aCache) {
+	if(aCache) {
 		var result = aCache.get(b)
-		if (typeof result === 'boolean') return result
+		if(typeof result === 'boolean') return result
 	} else {
 		cache.set(a, (aCache = new WeakMap().set(b, true)))
 	}
 
 	result = false
 
-	if (!prototype || !Reflect.getPrototypeOf(prototype)) {
+	if( !prototype || !Reflect.getPrototypeOf(prototype) ) {
 		const keys = Object.getOwnPropertyNames(a)
 		result = compareArrays(keys, Object.getOwnPropertyNames(b))
-		if (result) {
+		if(result) {
 			for (const key of keys) {
-				if (!compare(a[key], b[key])) {
+				if(!compare(a[key], b[key])) {
 					result = false
 					break
 				}
 			}
 		}
-	} else if (Array.isArray(a)) {
+	} else if(Array.isArray(a)) {
 		result = compareArrays(a, b)
-	} else if (a instanceof Set || (result = a instanceof Map)) {
+	} else if( a instanceof Set || (result = a instanceof Map) ) {
 		result = (
 			a.size === b.size &&
 			(!result || compareIterators(a.keys(), b.keys())) &&
 			compareIterators(a.values(), b.values())
 		)
-	} else if (a[Symbol.iterator]) {
+	} else if(a[Symbol.iterator]) {
 		result = compareIterators(a[Symbol.iterator](), b[Symbol.iterator]())
-	} else if (a[Symbol.toPrimitive]) {
+	} else if(a[Symbol.toPrimitive]) {
 		try {
 			result = compare(a[Symbol.toPrimitive]('default'), b[Symbol.toPrimitive]('default'))
 		} catch (e) {
@@ -72,10 +73,10 @@ export function compare(a: any, b: any) {
 
 function compareArrays(a: any[], b: any[]) {
 	let i = a.length
-	if (i !== b.length) return false
+	if(i !== b.length) return false
 
 	while (i--) {
-		if (!compare(a[i], b[i])) return false
+		if( !compare(a[i], b[i]) ) return false
 	}
 	return true
 }
@@ -85,11 +86,13 @@ function compareIterators(a: Iterator<any>, b: Iterator<any>) {
 		const aNext = a.next()
 		const bNext = b.next()
 
-		if (aNext.done || bNext.done) {
+		if(aNext.done || bNext.done) {
 			return aNext.done === bNext.done
 		}
 
-		if (!compare(aNext.value, bNext.value)) return false
+		if( !compare(aNext.value, bNext.value) ) {
+			return false
+		}
 	}
 }
 

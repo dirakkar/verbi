@@ -12,7 +12,7 @@ export type Fn<
  */
 export function fnCheck(v: any): v is Fn {
 	// https://stackoverflow.com/a/56035104
-	return typeof v === 'function' && (!('prototype' in v) || !Object.getOwnPropertyNames(v).includes('arguments'))
+	return typeof v === 'function' && ( !('prototype' in v) || !Object.getOwnPropertyNames(v).includes('arguments') )
 }
 
 /**

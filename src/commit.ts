@@ -35,7 +35,7 @@ export class CommitMessage {
  */
 export function commitMessageFromString(string: string) {
 	const newlines = string.indexOf('\n\n')
-	if (newlines === -1 && string.includes('\n')) {
+	if( newlines === -1 && string.includes('\n') ) {
 		throw new Error('Head and body of a commit message must be separated with two line feed characters')
 	}
 
@@ -45,10 +45,12 @@ export function commitMessageFromString(string: string) {
 	let level: CommitLevel | undefined
 	for (const char of head) {
 		let setLevel: CommitLevel | undefined
-		if (char === '+') setLevel = 'minor'
-		if (char === '-') setLevel = 'major'
-		if (setLevel && level) throw new Error('Commit message may specify level only once')
-		if (setLevel) level = setLevel
+		if(char === '+') setLevel = 'minor'
+		if(char === '-') setLevel = 'major'
+		if(setLevel && level) {
+			throw new Error('Commit message may specify level only once')
+		}
+		if(setLevel) level = setLevel
 		else break
 	}
 	level ??= 'patch'
@@ -58,7 +60,9 @@ export function commitMessageFromString(string: string) {
 	const scope = colon > -1 ? head.slice(start, colon).trimStart() : null
 	const title = colon > -1 ? head.slice(colon + 1).trimStart() : head.slice(start).trimStart()
 
-	if (!title.length) throw new Error('Commit message title must be non-empty')
+	if(!title.length) {
+		throw new Error('Commit message title must be non-empty')
+	}
 
 	return new CommitMessage(level, scope, title, body)
 }
@@ -67,11 +71,11 @@ export function commitMessageFromString(string: string) {
 export function commitMessageToString(message: CommitMessage) {
 	let result = ''
 
-	if (message.level === 'minor') result += '+'
-	if (message.level === 'major') result += '-'
-	if (message.scope) result += message.scope + ': '
+	if(message.level === 'minor') result += '+'
+	if(message.level === 'major') result += '-'
+	if(message.scope) result += message.scope + ': '
 	result += message.title
-	if (message.body) result += '\n\n' + message.body
+	if(message.body) result += '\n\n' + message.body
 
 	return result
 }

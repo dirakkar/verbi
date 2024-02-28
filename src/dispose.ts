@@ -16,6 +16,10 @@ export function disposeAble(v: any): v is DisposeAble {
 }
 
 export function dispose(v: DisposeAble) {
-	if (Symbol.dispose in v) v[Symbol.dispose]!()
-	if (Symbol.asyncDispose in v) v[Symbol.asyncDispose]!().catch(console.error)
+	if(Symbol.dispose in v) {
+		v[Symbol.dispose]!()
+	}
+	if(Symbol.asyncDispose in v) {
+		v[Symbol.asyncDispose]!().catch(console.error)
+	}
 }

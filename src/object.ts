@@ -3,7 +3,7 @@ export function objectCheck(v: any): v is object {
 }
 
 export function objectPlainCheck(v: any): v is object {
-	if (!objectCheck(v)) return false
+	if(!objectCheck(v)) return false
 	const prototype = Reflect.getPrototypeOf(v)
 	return !prototype || !Reflect.getPrototypeOf(prototype)
 }

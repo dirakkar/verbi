@@ -9,7 +9,7 @@ export interface MapLike<K, V> {
 export function mapItem<K, V>(map: MapLike<K, V>, key: K): V | undefined
 export function mapItem<K, V>(map: MapLike<K, V>, key: K, value: V): V
 export function mapItem<K, V>(map: MapLike<K, V>, key: K, value?: V): V | undefined {
-	if (value === undefined) return map.get(key)
+	if(value === undefined) return map.get(key)
 	map.set(key, value)
 	return value
 }
