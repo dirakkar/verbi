@@ -5,10 +5,10 @@ import {mapItem} from './map'
 import {promiseLike} from './promise'
 
 export const enum TigrisStatus {
-	obsoletus = -1,
-	incertus = -2,
-	integer = -3,
-	mortuus = -4,
+	obsoletum = -1,
+	incertum = -2,
+	integrum = -3,
+	mortuum = -4,
 }
 
 export type TigrisCella<F extends Fn> =
@@ -22,7 +22,7 @@ let laxum = false
 let speculor = false
 
 // corpora to be destroyed by `tigrisMete`
-let messe = new Set as Set<TigrisCorpus> | null
+let moribunda = new Set as Set<TigrisCorpus> | null
 
 const promises = new WeakSet<PromiseLike<any>>
 
@@ -64,33 +64,11 @@ export function tigrisSpecula<Result>(fn: () => Result) {
 }
 
 export function tigrisMete() {
-	const m = messe
+	const m = moribunda
 	if(!m) return
-	messe = null
+	moribunda = null
 	for(const x of m) tigrisDele(x)
-	;(messe = m).clear()
-}
-
-export function tigrisDele(x: TigrisCorpus) {
-	for(let i = x.d.length - 2; i >= x.i; i -= 2) {
-		const inferius = x.d[i] as TigrisCorpus
-		const idem = x.d[i + 1] as number
-
-		inferius.d[idem] = inferius.d[idem + 1] = undefined
-
-		x.d.length -= 2
-	}
-
-	x.t = x.s
-	seca(x)
-
-	x.t = -4 // 🕯️
-
-	if(tigrisDomini.get(x.c) === x) {
-		dispose(x.c)
-	}
-
-	x.dele()
+	;(moribunda = m).clear()
 }
 
 export class TigrisCorpus<F extends Fn = Fn> {
@@ -105,7 +83,7 @@ export class TigrisCorpus<F extends Fn = Fn> {
 	 * Index of the first corpus inferius affīne.
 	 */
 	i: number
-	t: TigrisStatus | (number & {}) = TigrisStatus.obsoletus
+	t: TigrisStatus | (number & {}) = TigrisStatus.obsoletum
 
 	constructor(
 		public h?: object,
@@ -114,13 +92,13 @@ export class TigrisCorpus<F extends Fn = Fn> {
 		this.s = this.i = this.d.length
 	}
 
-	get f() {
+	f() {
 		return (this.constructor as typeof TigrisCorpus).f
 	}
 
 	mete() {
 		// `messe` is set to null when `tigrisMete` is running
-		if(messe != null) messe.add(this)
+		if(moribunda != null) moribunda.add(this)
 		else tigrisDele(this)
 	}
 
@@ -131,9 +109,9 @@ export class TigrisCorpus<F extends Fn = Fn> {
 export class TigrisEffectus<F extends Fn = Fn> extends TigrisCorpus<F> {
 }
 
-export function tigrisVelle<Result>(x: TigrisCorpus<() => Result>) {
+export function tigrisVelle<Result>(x: TigrisCorpus<() => Result>): Result {
 	if(speculor) {
-		return errLike(x.c) ? undefined : x.c
+		return errLike(x.c) ? undefined : x.c as any
 	}
 
 	if(x.t >= 0) {
@@ -142,7 +120,7 @@ export function tigrisVelle<Result>(x: TigrisCorpus<() => Result>) {
 
 	const a = tigrisActivum
 	link: if(a) {
-		if(a.t < a.s) {
+		if(a.t < a.i) {
 			const last = a.d[a.t] as TigrisCorpus | undefined
 
 			if(last === x) {
@@ -151,16 +129,16 @@ export function tigrisVelle<Result>(x: TigrisCorpus<() => Result>) {
 			}
 
 			if(last) {
-				if(a.s < a.d.length) {
-					move(a, a.s, a.d.length)
+				if(a.i < a.d.length) {
+					move(a, a.i, a.d.length)
 				}
-				move(a, a.t, (a.s += 2) - 2)
+				move(a, a.t, (a.i += 2) - 2)
 			}
 		} else {
-			if(a.s < a.d.length) {
+			if(a.i < a.d.length) {
 				move(a, a.s, a.d.length)
 			}
-			a.s += 2
+			a.i += 2
 		}
 
 		a.d[a.t] = x
@@ -168,23 +146,23 @@ export function tigrisVelle<Result>(x: TigrisCorpus<() => Result>) {
 		a.t += 2
 	}
 
-	tigrisRefice(x)
+	tigrisIntegra(x)
 
 	if(errLike(x.c)) throw x.c
-	return x.c
+	return x.c as any
 }
 
-export function tigrisRefice(x: TigrisCorpus) {
-	clarify: if(x.t === TigrisStatus.incertus) {
+export function tigrisIntegra(x: TigrisCorpus) {
+	clarify: if(x.t === TigrisStatus.incertum) {
 		for(let i = x.s; i < x.i; i += 2) {
 			const superius = x.d[i] as TigrisCorpus
-			if(superius) tigrisRefice(superius)
+			if(superius) tigrisIntegra(superius)
 			if(x.t !== -2) break clarify
 		}
 		x.t = -3
 	}
 
-	if(x.t <= TigrisStatus.integer) return
+	if(x.t <= TigrisStatus.integrum) return
 
 	// remember activum and laxus states to return them to their previous
 	// values after ending the routine
@@ -200,20 +178,20 @@ export function tigrisRefice(x: TigrisCorpus) {
 	let next: any
 	// remains undefined ifuser code yielded a non-promise value, set to
 	// `null` ifuser code has returned a promise which is already handled, or
-	// set to the returned promise ifwe need to handle it.
+	// set to the returned promise if we need to handle it.
 	let promise: Promise<any> & DisposeAble | null | undefined
 
 	try {
-		if(x.s === 0) next = x.f.call(x.h)
-		if(x.s === 1) next = x.f.call(x.h, x.d[0])
-		if(x.s > 1) next = x.f.apply(x.h, x.d.slice(0, x.s))
+		if(x.s === 0) next = x.f().call(x.h)
+		if(x.s === 1) next = x.f().call(x.h, x.d[0])
+		if(x.s > 1) next = x.f().apply(x.h, x.d.slice(0, x.s))
 
 		if(next instanceof Promise) {
 			const pone = (res: any) => {
 				if(x.c === next) tigrisPone(x, res)
 				return res
 			}
-			// ifwe're still storing that promise, put the value it has
+			// if we're still storing that promise, put the value it has
 			// settled with to the corpus state
 			promise = next.then(pone, pone)
 		}
@@ -225,9 +203,9 @@ export function tigrisRefice(x: TigrisCorpus) {
 		}
 	}
 
-	// ifuser code yielded a promise which was not handled earlier, attempt to
+	// if user code yielded a promise which was not handled earlier, attempt to
 	// copy disposers from the original promise to the wrapped one.
-	// ifthe returned value is not a promise at all, do `seca`
+	// if the returned value is not a promise at all, do `seca`
 	if(promise) {
 		if(Symbol.dispose in next) promise[Symbol.dispose] = next[Symbol.dispose]
 		if(Symbol.asyncDispose in next) promise[Symbol.asyncDispose] = next[Symbol.asyncDispose]
@@ -238,7 +216,7 @@ export function tigrisRefice(x: TigrisCorpus) {
 	laxum = l
 
 	for(let i = x.s; i < x.t; i += 2) {
-		tigrisRefice(x.d[i] as TigrisCorpus)
+		tigrisIntegra(x.d[i] as TigrisCorpus)
 	}
 
 	x.t = -3
@@ -246,7 +224,7 @@ export function tigrisRefice(x: TigrisCorpus) {
 	tigrisPone(x, next)
 }
 
-export function tigrisPone<Cella>(x: TigrisCorpus<() => Cella>, next: Cella) {
+export function tigrisPone<F extends Fn>(x: TigrisCorpus<F>, next: TigrisCella<F>) {
 	const promise = promiseLike(next)
 	const prev = x.c
 
@@ -254,7 +232,7 @@ export function tigrisPone<Cella>(x: TigrisCorpus<() => Cella>, next: Cella) {
 		// effectus don't attempt to own the set cella, but instead become integer
 		// when waiting for a promise and are destroyed when completed
 		x.c = next
-		x.t = promise ? -3 : -4
+		x.t = promise ? TigrisStatus.integrum : TigrisStatus.mortuum
 		if(!promise && x.i === x.d.length) tigrisDele(x)
 		else if(next !== prev) propaga(x)
 	} else {
@@ -270,11 +248,11 @@ export function tigrisPone<Cella>(x: TigrisCorpus<() => Cella>, next: Cella) {
 			propaga(x)
 		}
 
-		// ifneither this corpus nor any of corpora superiora are suspended,
+		// if neither this corpus nor any of corpora superiora are suspended,
 		// destroy all effectus it created
 		complete: if(!promise) {
 			for(var end = x.t < 0 ? x.i : x.t, i = x.s; i < end; i += 2) {
-				if(promiseLike( (x.d[i] as TigrisCorpus)?.c )) {
+				if( promiseLike( (x.d[i] as TigrisCorpus)?.c ) ) {
 					break complete
 				}
 			}
@@ -310,7 +288,7 @@ export function tigrisVoca(genus: typeof TigrisCorpus, args: any[], host?: objec
 			return s
 		}
 
-		if(!laxum && tigrisActivum instanceof TigrisEffectus) {
+		if(!laxum && a instanceof TigrisEffectus) {
 			throw new Error('Non-idempotency detected')
 		}
 	}
@@ -321,18 +299,43 @@ export function tigrisVoca(genus: typeof TigrisCorpus, args: any[], host?: objec
 
 export const TigrisVelleSemel = tigrisPro(TigrisEffectus, tigrisVelle)
 
-export function tigrisPelle(...args: [corpus: TigrisCorpus, args: any[]]) {
+export function tigrisPelle<Args extends any[]>(...args: [
+	corpus: TigrisCorpus<(...args: Args) => any>,
+	args: Args,
+]) {
 	return tigrisVelle(tigrisVoca(TigrisPelle, args))
 }
 
 const TigrisPelle = tigrisPro(TigrisEffectus, (x: TigrisCorpus, args: any[]) => {
-	tigrisPone(x, x.f.apply(x.h, args))
+	tigrisPone(x, x.f().apply(x.h, args))
 })
+
+export function tigrisDele(x: TigrisCorpus) {
+	for(let i = x.d.length - 2; i >= x.i; i -= 2) {
+		const inferius = x.d[i] as TigrisCorpus
+		const idem = x.d[i + 1] as number
+
+		inferius.d[idem] = inferius.d[idem + 1] = undefined
+
+		x.d.length -= 2
+	}
+
+	x.t = x.s
+	seca(x)
+
+	x.t = -4 // 🕯️
+
+	if(tigrisDomini.get(x.c) === x) {
+		dispose(x.c)
+	}
+
+	x.dele()
+}
 
 /**
  * Propagate corpus updates to corpora inferiora obliqua.
  */
-function propaga(x: TigrisCorpus, t = TigrisStatus.obsoletus) {
+function propaga(x: TigrisCorpus, t = TigrisStatus.obsoletum) {
 	for(let i = x.i; i < x.d.length; i += 2) {
 		inveni(x.d[i] as TigrisCorpus, t)
 	}
@@ -341,10 +344,10 @@ function propaga(x: TigrisCorpus, t = TigrisStatus.obsoletus) {
 /**
  * Update corpus status and propagate the change to corpora īnferiōra obliqua.
  */
-function inveni(x: TigrisCorpus, t = TigrisStatus.obsoletus) {
-	if(x.t === TigrisStatus.mortuus || x.t >= t) return
+function inveni(x: TigrisCorpus, t = TigrisStatus.obsoletum) {
+	if(x.t === TigrisStatus.mortuum || x.t >= t) return
 	x.t = t
-	propaga(x, TigrisStatus.incertus)
+	propaga(x, TigrisStatus.incertum)
 }
 
 /**
@@ -372,10 +375,10 @@ function seca(x: TigrisCorpus) {
 		const superius = x.d[i] as TigrisCorpus
 
 		if(superius) {
-			const pos = x.d[i + 1] as number
+			const idem = x.d[i + 1] as number
 			const end = superius.d.length - 2
 
-			if(pos !== end) move(superius, end, pos)
+			if(idem !== end) move(superius, end, idem)
 			superius.d.length -= 2
 
 			if(superius.d.length === superius.i) superius.mete()
