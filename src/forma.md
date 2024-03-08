@@ -1,4 +1,4 @@
-Fōrma is a convention for describing objects that are reactive, stateful and customizable in their behaviour. In the program, Fōrmae are basically TypeScript classes that inherit from `Forma`.
+Fōrma is an object system for describing objects that are reactive, stateful and customizable in their behaviour. Fōrmae are basically TypeScript classes that inherit from `Forma`.
 
 ## Description
 
@@ -21,4 +21,12 @@ Nouns/Adjectives:
 | feminine | Mūtābilis | Mūtābilēs | Changeable |
 | feminine | Multiplex | Multiplicēs | Manifold |
 | masculine | Discrīminātor | Discrīminātōrēs | Discriminator |
-| neuter | Exemplum |
+| neuter | Exemplum | Exempla | Instance |
+| feminine | Corrēctiō | Corrēctiōnēs | Correction, amendment |
+| masculine | Prōgenitor | Prōgenitōrēs | Ancestor, progenitor |
+
+Verbs:
+
+| Infinitive | Imperative | Literal translation |
+| - | - | - |
+| Creāre | Creā | Create |
